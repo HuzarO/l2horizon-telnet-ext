@@ -1,0 +1,24 @@
+<project name="CustomQuestsExt" default="jar">
+    <property name="src" value="src"/>
+    <property name="build" value="bin"/>
+    <property name="dist" value="/Users/bartf/Projects/l2horizon-server/gameserver/"/>
+    <property name="jar.name" value="CustomQuestsExt.ext.jar"/>
+
+    <target name="clean">
+        <delete dir="${build}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build}"/>
+        <javac srcdir="${src}" destdir="${build}" includeantruntime="false"/>
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${dist}"/>
+        <jar destfile="${dist}/${jar.name}" basedir="${build}">
+            <manifest>
+                <attribute name="Created-By" value="Eclipse Ant"/>
+            </manifest>
+        </jar>
+    </target>
+</project>

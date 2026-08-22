@@ -1,0 +1,9 @@
+Summary for decompiled/GiranForgeInterface.ext.jar
+Decompiled with CFR 0.152
+
+
+l2.gameserver.model.entity.SevenSigns
+----------------------------
+
+setPlayerInfo(int int int )
+  Loose catch block

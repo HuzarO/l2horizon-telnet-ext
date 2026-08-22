@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT list (category+)>
+
+<!ELEMENT category (buff+)>
+<!ATTLIST category
+	type CDATA #REQUIRED
+>
+
+<!ELEMENT buff EMPTY>
+<!ATTLIST buff
+	id CDATA #REQUIRED
+	level CDATA #IMPLIED
+	price CDATA #IMPLIED
+	desc CDATA #IMPLIED
+>
