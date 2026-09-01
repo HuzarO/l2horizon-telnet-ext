@@ -9,13 +9,14 @@ import l2.gameserver.network.l2.s2c.NpcHtmlMessage;
 import l2.gameserver.templates.npc.NpcTemplate;
 
 /**
- * Fortress control unit: consumes a Maintenance Tool (10014) to open the
- * machine room doors once the outer power units are down. Ported from the H5
- * fortress siege ControlUnitInstance.
+ * Fortress control unit: consumes a Control Room Card to open the machine room
+ * doors once the outer power units are down. Ported from the H5 fortress siege
+ * ControlUnitInstance; the card is item 10031 on this server (H5 used 10014,
+ * which this client already occupies with a D-grade enchant scroll).
  */
 public class ControlUnitInstance extends NpcInstance
 {
-	private static final int ITEM_ID = 10014;
+	private static final int ITEM_ID = 10031;
 
 	private static final int COND_CAN_OPEN = 0;
 	private static final int COND_NO_ITEM = 1;

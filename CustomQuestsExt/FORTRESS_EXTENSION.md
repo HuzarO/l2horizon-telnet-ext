@@ -5,7 +5,10 @@ the full siege event (registration at the Suspicious Merchant, commanders/barrac
 units, combat flag capture), fortress NPCs and their AI, facilities, envoys/contracts and
 Blood Oath logistics. The data side lives in the `l2horizon-server` datapack (branch
 `claude/lineage2-fortress-xml-files-2gvuuw`): residence/event/zone XMLs, 519 NPC templates,
-4800+ siege spawns, items 9819/9910/10014, skills 3318/3358.
+4800+ siege spawns, skills 3318/3358, and items: 9819 Combat Flag, 9910 Blood Oath,
+10031 Control Room Card (moved from H5's 10014, which this client uses for a D-grade
+enchant scroll), 9912 Knight's Epaulette + shirts 9579-9581 (guard drops) and 10212
+npc Only (Bow) - H5 items this pack was missing.
 
 The core `server.jar` of this build has no fortress implementation - `ResidenceType.Fortress`
 exists, but there is no `Fortress` residence class and the fortress client packets are stubs.
