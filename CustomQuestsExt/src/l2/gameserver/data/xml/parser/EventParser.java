@@ -1,0 +1,350 @@
+package l2.gameserver.data.xml.parser;
+
+import java.io.File;
+import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.dom4j.Element;
+
+import l2.commons.collections.MultiValueSet;
+import l2.commons.data.xml.AbstractDirParser;
+import l2.gameserver.Config;
+import l2.gameserver.data.xml.holder.EventHolder;
+import l2.gameserver.model.entity.events.EventAction;
+import l2.gameserver.model.entity.events.EventType;
+import l2.gameserver.model.entity.events.GlobalEvent;
+import l2.gameserver.model.entity.events.actions.ActiveDeactiveAction;
+import l2.gameserver.model.entity.events.actions.AnnounceAction;
+import l2.gameserver.model.entity.events.actions.GiveItemAction;
+import l2.gameserver.model.entity.events.actions.IfElseAction;
+import l2.gameserver.model.entity.events.actions.InitAction;
+import l2.gameserver.model.entity.events.actions.NpcSayAction;
+import l2.gameserver.model.entity.events.actions.OpenCloseAction;
+import l2.gameserver.model.entity.events.actions.PlaySoundAction;
+import l2.gameserver.model.entity.events.actions.RefreshAction;
+import l2.gameserver.model.entity.events.actions.SayAction;
+import l2.gameserver.model.entity.events.actions.SpawnDespawnAction;
+import l2.gameserver.model.entity.events.actions.StartStopAction;
+import l2.gameserver.model.entity.events.actions.TeleportPlayersAction;
+import l2.gameserver.model.entity.events.objects.BoatPoint;
+import l2.gameserver.model.entity.events.objects.CTBTeamObject;
+import l2.gameserver.model.entity.events.objects.CastleDamageZoneObject;
+import l2.gameserver.model.entity.events.objects.DoorObject;
+import l2.gameserver.model.entity.events.objects.FortressCombatFlagObject;
+import l2.gameserver.model.entity.events.objects.SiegeToggleNpcObject;
+import l2.gameserver.model.entity.events.objects.SpawnExObject;
+import l2.gameserver.model.entity.events.objects.StaticObjectObject;
+import l2.gameserver.model.entity.events.objects.ZoneObject;
+import l2.gameserver.network.l2.components.ChatType;
+import l2.gameserver.network.l2.components.NpcString;
+import l2.gameserver.network.l2.components.SysString;
+import l2.gameserver.network.l2.components.SystemMsg;
+import l2.gameserver.network.l2.s2c.PlaySound;
+import l2.gameserver.utils.Location;
+
+/**
+ * Classpath override of the server.jar EventParser. The parsing logic is recreated
+ * 1:1 from the decompiled original (see decompiled/EventParser_decompiled.java);
+ * the single addition is the combat_flag object branch (present in events.dtd but
+ * ignored by the stock parser), which the fortress siege events need. It follows
+ * the L2Scripts High Five EventParser and produces FortressCombatFlagObject.
+ */
+public final class EventParser extends AbstractDirParser<EventHolder>
+{
+	private static final EventParser _instance = new EventParser();
+
+	public static EventParser getInstance()
+	{
+		return _instance;
+	}
+
+	protected EventParser()
+	{
+		super(EventHolder.getInstance());
+	}
+
+	@Override
+	public File getXMLDir()
+	{
+		return new File(Config.DATAPACK_ROOT, "data/events/");
+	}
+
+	@Override
+	public boolean isIgnored(File f)
+	{
+		return false;
+	}
+
+	@Override
+	public String getDTDFileName()
+	{
+		return "events.dtd";
+	}
+
+	@Override
+	protected void readData(Element rootElement) throws Exception
+	{
+		for(Iterator<Element> iterator = rootElement.elementIterator("event"); iterator.hasNext();)
+		{
+			Element eventElement = iterator.next();
+			int id = Integer.parseInt(eventElement.attributeValue("id"));
+			String name = eventElement.attributeValue("name");
+			String impl = eventElement.attributeValue("impl");
+			EventType type = EventType.valueOf(eventElement.attributeValue("type"));
+			Class<?> eventClass = null;
+			try
+			{
+				eventClass = Class.forName("l2.gameserver.model.entity.events.impl." + impl + "Event");
+			}
+			catch(ClassNotFoundException e)
+			{
+				info("Not found impl class: " + impl + "; File: " + getCurrentFileName());
+				continue;
+			}
+
+			Constructor<?> constructor = eventClass.getConstructor(MultiValueSet.class);
+			MultiValueSet<String> set = new MultiValueSet<String>();
+			set.set("id", id);
+			set.set("name", name);
+			for(Iterator<Element> parameterIterator = eventElement.elementIterator("parameter"); parameterIterator.hasNext();)
+			{
+				Element parameterElement = parameterIterator.next();
+				set.set(parameterElement.attributeValue("name"), parameterElement.attributeValue("value"));
+			}
+
+			GlobalEvent event = (GlobalEvent) constructor.newInstance(set);
+			event.addOnStartActions(parseActions(eventElement.element("on_start"), Integer.MAX_VALUE));
+			event.addOnStopActions(parseActions(eventElement.element("on_stop"), Integer.MAX_VALUE));
+			event.addOnInitActions(parseActions(eventElement.element("on_init"), Integer.MAX_VALUE));
+
+			Element onTime = eventElement.element("on_time");
+			if(onTime != null)
+				for(Iterator<Element> onTimeIterator = onTime.elementIterator("on"); onTimeIterator.hasNext();)
+				{
+					Element onElement = onTimeIterator.next();
+					int time = Integer.parseInt(onElement.attributeValue("time"));
+					List<EventAction> actions = parseActions(onElement, time);
+					event.addOnTimeActions(time, actions);
+				}
+
+			for(Iterator<Element> objectIterator = eventElement.elementIterator("objects"); objectIterator.hasNext();)
+			{
+				Element objectElement = objectIterator.next();
+				String objectsName = objectElement.attributeValue("name");
+				List<Serializable> objects = parseObjects(objectElement);
+				event.addObjects(objectsName, objects);
+			}
+
+			getHolder().addEvent(type, event);
+		}
+	}
+
+	private List<Serializable> parseObjects(Element element)
+	{
+		if(element == null)
+			return Collections.emptyList();
+
+		List<Serializable> objects = new ArrayList<Serializable>(2);
+		for(Iterator<Element> objectsIterator = element.elementIterator(); objectsIterator.hasNext();)
+		{
+			Element objectsElement = objectsIterator.next();
+			String nodeName = objectsElement.getName();
+			if(nodeName.equalsIgnoreCase("boat_point"))
+				objects.add(BoatPoint.parse(objectsElement));
+			else if(nodeName.equalsIgnoreCase("point"))
+				objects.add(Location.parse(objectsElement));
+			else if(nodeName.equalsIgnoreCase("spawn_ex"))
+				objects.add(new SpawnExObject(objectsElement.attributeValue("name")));
+			else if(nodeName.equalsIgnoreCase("door"))
+				objects.add(new DoorObject(Integer.parseInt(objectsElement.attributeValue("id"))));
+			else if(nodeName.equalsIgnoreCase("static_object"))
+				objects.add(new StaticObjectObject(Integer.parseInt(objectsElement.attributeValue("id"))));
+			else if(nodeName.equalsIgnoreCase("combat_flag"))
+			{
+				// addition vs the stock parser: fortress combat flags (H5 EventParser behavior)
+				int x = Integer.parseInt(objectsElement.attributeValue("x"));
+				int y = Integer.parseInt(objectsElement.attributeValue("y"));
+				int z = Integer.parseInt(objectsElement.attributeValue("z"));
+				objects.add(new FortressCombatFlagObject(new Location(x, y, z)));
+			}
+			else if(nodeName.equalsIgnoreCase("siege_toggle_npc"))
+			{
+				int npcId = Integer.parseInt(objectsElement.attributeValue("id"));
+				int fakeNpcId = Integer.parseInt(objectsElement.attributeValue("fake_id"));
+				int x = Integer.parseInt(objectsElement.attributeValue("x"));
+				int y = Integer.parseInt(objectsElement.attributeValue("y"));
+				int z = Integer.parseInt(objectsElement.attributeValue("z"));
+				int hp = Integer.parseInt(objectsElement.attributeValue("hp"));
+
+				Set<String> zoneList = Collections.emptySet();
+				for(Iterator<Element> oIterator = objectsElement.elementIterator(); oIterator.hasNext();)
+				{
+					Element sub = oIterator.next();
+					if(zoneList.isEmpty())
+						zoneList = new HashSet<String>();
+					zoneList.add(sub.attributeValue("name"));
+				}
+				objects.add(new SiegeToggleNpcObject(npcId, fakeNpcId, new Location(x, y, z), hp, zoneList));
+			}
+			else if(nodeName.equalsIgnoreCase("castle_zone"))
+			{
+				long price = Long.parseLong(objectsElement.attributeValue("price"));
+				objects.add(new CastleDamageZoneObject(objectsElement.attributeValue("name"), price));
+			}
+			else if(nodeName.equalsIgnoreCase("zone"))
+				objects.add(new ZoneObject(objectsElement.attributeValue("name")));
+			else if(nodeName.equalsIgnoreCase("ctb_team"))
+			{
+				int mobId = Integer.parseInt(objectsElement.attributeValue("mob_id"));
+				int flagId = Integer.parseInt(objectsElement.attributeValue("id"));
+				Location loc = Location.parse(objectsElement);
+				objects.add(new CTBTeamObject(mobId, flagId, loc));
+			}
+		}
+		return objects;
+	}
+
+	private List<EventAction> parseActions(Element element, int time)
+	{
+		if(element == null)
+			return Collections.emptyList();
+
+		IfElseAction lastIf = null;
+		List<EventAction> actions = new ArrayList<EventAction>(0);
+		for(Iterator<Element> iterator = element.elementIterator(); iterator.hasNext();)
+		{
+			Element actionElement = iterator.next();
+			if(actionElement.getName().equalsIgnoreCase("start"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new StartStopAction(name, true));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("stop"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new StartStopAction(name, false));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("spawn"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new SpawnDespawnAction(name, true));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("despawn"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new SpawnDespawnAction(name, false));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("open"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new OpenCloseAction(true, name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("close"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new OpenCloseAction(false, name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("active"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new ActiveDeactiveAction(true, name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("deactive"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new ActiveDeactiveAction(false, name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("refresh"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new RefreshAction(name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("init"))
+			{
+				String name = actionElement.attributeValue("name");
+				actions.add(new InitAction(name));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("npc_say"))
+			{
+				int npc = Integer.parseInt(actionElement.attributeValue("npc"));
+				ChatType chat = ChatType.valueOf(actionElement.attributeValue("chat"));
+				int range = Integer.parseInt(actionElement.attributeValue("range"));
+				NpcString text = NpcString.valueOf(actionElement.attributeValue("text"));
+				actions.add(new NpcSayAction(npc, range, chat, text));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("play_sound"))
+			{
+				int range = Integer.parseInt(actionElement.attributeValue("range"));
+				String sound = actionElement.attributeValue("sound");
+				PlaySound.Type soundType = PlaySound.Type.valueOf(actionElement.attributeValue("type"));
+				actions.add(new PlaySoundAction(range, sound, soundType));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("give_item"))
+			{
+				int itemId = Integer.parseInt(actionElement.attributeValue("id"));
+				long count = Integer.parseInt(actionElement.attributeValue("count"));
+				actions.add(new GiveItemAction(itemId, count));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("announce"))
+			{
+				String val = actionElement.attributeValue("val");
+				if(val == null && time == Integer.MAX_VALUE)
+				{
+					info("Can't get announce time." + getCurrentFileName());
+					continue;
+				}
+				int announceTime = val == null ? time : Integer.parseInt(val);
+				actions.add(new AnnounceAction(announceTime));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("if"))
+			{
+				String name = actionElement.attributeValue("name");
+				IfElseAction action = new IfElseAction(name, false);
+				action.setIfList(parseActions(actionElement, time));
+				actions.add(action);
+				lastIf = action;
+			}
+			else if(actionElement.getName().equalsIgnoreCase("ifnot"))
+			{
+				String name = actionElement.attributeValue("name");
+				IfElseAction action = new IfElseAction(name, true);
+				action.setIfList(parseActions(actionElement, time));
+				actions.add(action);
+				lastIf = action;
+			}
+			else if(actionElement.getName().equalsIgnoreCase("else"))
+			{
+				if(lastIf == null)
+					info("Not find <if> for <else> tag");
+				else
+					lastIf.setElseList(parseActions(actionElement, time));
+			}
+			else if(actionElement.getName().equalsIgnoreCase("say"))
+			{
+				ChatType chat = ChatType.valueOf(actionElement.attributeValue("chat"));
+				int range = Integer.parseInt(actionElement.attributeValue("range"));
+				String how = actionElement.attributeValue("how");
+				String text = actionElement.attributeValue("text");
+				SysString sysString = SysString.valueOf2(how);
+				SayAction sayAction;
+				if(sysString != null)
+					sayAction = new SayAction(range, chat, sysString, SystemMsg.valueOf(text));
+				else
+					sayAction = new SayAction(range, chat, how, NpcString.valueOf(text));
+				actions.add(sayAction);
+			}
+			else if(actionElement.getName().equalsIgnoreCase("teleport_players"))
+			{
+				String id = actionElement.attributeValue("id");
+				actions.add(new TeleportPlayersAction(id));
+			}
+		}
+		return actions.isEmpty() ? Collections.<EventAction> emptyList() : actions;
+	}
+}

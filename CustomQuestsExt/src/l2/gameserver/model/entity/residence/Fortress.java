@@ -283,9 +283,76 @@ public class Fortress extends Residence
 		_relatedCastles.add(castle);
 	}
 
+	/**
+	 * Castles whose domain/boundary this fortress belongs to. This core's
+	 * ResidenceParser does not read the related_fortresses blocks of the castle
+	 * XMLs, so the canonical mapping (identical to those blocks) is kept here
+	 * and resolved lazily against the ResidenceHolder.
+	 */
 	public List<Castle> getRelatedCastles()
 	{
+		if(_relatedCastles.isEmpty())
+			synchronized(_relatedCastles)
+			{
+				if(_relatedCastles.isEmpty())
+					for(int castleId : getRelatedCastleIds(getId()))
+					{
+						Castle castle = ResidenceHolder.getInstance().getResidence(Castle.class, castleId);
+						if(castle != null)
+							_relatedCastles.add(castle);
+					}
+			}
 		return _relatedCastles;
+	}
+
+	/** Same relations as the related_fortresses blocks in data/residences/[1]-[9]. */
+	private static int[] getRelatedCastleIds(int fortressId)
+	{
+		switch(fortressId)
+		{
+			case 101: // Shanty: Gludio domain
+			case 102: // Southern: Gludio domain
+				return new int[] { 1 };
+			case 103: // Hive: Dion domain
+				return new int[] { 2 };
+			case 104: // Valley: Giran domain
+				return new int[] { 3 };
+			case 105: // Ivory: Oren domain
+				return new int[] { 4 };
+			case 106: // Narsell: Aden domain
+			case 107: // Basin: Aden domain
+				return new int[] { 5 };
+			case 108: // White Sands: Innadril domain
+				return new int[] { 6 };
+			case 109: // Borderland: Goddard domain
+				return new int[] { 7 };
+			case 110: // Swamp: Rune domain
+				return new int[] { 8 };
+			case 111: // Archaic: Schuttgart domain
+				return new int[] { 9 };
+			case 112: // Floran: Gludio/Dion boundary
+				return new int[] { 1, 2 };
+			case 113: // Cloud Mountain: Gludio/Oren boundary
+				return new int[] { 1, 4 };
+			case 114: // Tanor: Dion/Giran boundary
+				return new int[] { 2, 3 };
+			case 115: // Dragonspine: Dion/Oren boundary
+				return new int[] { 2, 4 };
+			case 116: // Antharas: Giran/Oren boundary
+				return new int[] { 3, 4 };
+			case 117: // Western: Oren/Aden/Goddard boundary
+				return new int[] { 4, 5, 7 };
+			case 118: // Hunters: Giran/Aden boundary
+				return new int[] { 3, 5 };
+			case 119: // Aaru: Giran/Innadril boundary
+				return new int[] { 3, 6 };
+			case 120: // Demon: Goddard/Rune boundary
+				return new int[] { 7, 8 };
+			case 121: // Monastic: Rune/Schuttgart boundary
+				return new int[] { 8, 9 };
+			default:
+				return new int[0];
+		}
 	}
 
 	/**
