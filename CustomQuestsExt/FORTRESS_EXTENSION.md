@@ -110,6 +110,15 @@ clan window shows the fortress as the clan's base.
 Note: the envoy refuses a castle contract while the related castle is
 unowned - that is retail behavior, not a bug; independence always works.
 
+Combat Flag handling on this core: `pickUp` broadcasts the char info after the
+programmatic equip (this core's `Inventory.equipItem` is silent, so without it
+the client showed empty hands until a manual re-equip), and
+`FortressDAO.deleteStrayCombatFlags()` wipes item 9819 from persisted
+inventories at every boot - sieges never survive a restart, so a flag that
+rode a restart inside someone's bag would otherwise become an ordinary
+tradeable weapon. `FortressWorldInfoListener` pushes `ExShowFortressInfo` at
+enter-world so the world map colors fortresses like castles.
+
 ## Siege flow (retail H5 rules)
 
 1. A clan (level 4+, no castle relation conflicts) registers at the fortress's walking

@@ -131,6 +131,11 @@ public class FortressCombatFlagObject implements SpawnableObject, FlagItemAttach
 	public void pickUp(Player player)
 	{
 		player.getInventory().equipItem(_item);
+		// this core's Inventory.equipItem applies the slot change silently - the
+		// manual RequestUseItem path broadcasts afterwards, so the programmatic
+		// pickup must too or the client keeps showing empty hands
+		player.sendChanges();
+		player.broadcastCharInfo();
 
 		FortressSiegeEvent event = player.getEvent(FortressSiegeEvent.class);
 		if(event != null)

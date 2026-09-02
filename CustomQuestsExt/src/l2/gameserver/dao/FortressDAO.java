@@ -53,6 +53,34 @@ public class FortressDAO
 
 	private boolean _tableChecked = false;
 
+	/**
+	 * The Combat Flag (9819) exists only while a fortress siege is running; a
+	 * server restart mid-siege ends the siege but leaves an equipped flag in the
+	 * carrier's persisted inventory as an ordinary weapon. Sieges never survive a
+	 * restart on this core, so every 9819 row at boot is stale - wipe them.
+	 */
+	public void deleteStrayCombatFlags()
+	{
+		Connection con = null;
+		PreparedStatement statement = null;
+		try
+		{
+			con = DatabaseFactory.getInstance().getConnection();
+			statement = con.prepareStatement("DELETE FROM items WHERE item_id = 9819");
+			int deleted = statement.executeUpdate();
+			if(deleted > 0)
+				_log.info("FortressDAO: removed " + deleted + " stray Combat Flag(s) from player inventories.");
+		}
+		catch(Exception e)
+		{
+			_log.error("FortressDAO: could not clean stray Combat Flags", e);
+		}
+		finally
+		{
+			DbUtils.closeQuietly(con, statement);
+		}
+	}
+
 	public static FortressDAO getInstance()
 	{
 		return _instance;
