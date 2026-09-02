@@ -17,6 +17,8 @@ import l2.gameserver.model.entity.events.objects.FortressCombatFlagObject;
 import l2.gameserver.model.entity.events.objects.SiegeClanObject;
 import l2.gameserver.model.entity.events.objects.StaticObjectObject;
 import l2.gameserver.model.instances.StaticObjectInstance;
+import l2.gameserver.model.entity.residence.Fortress;
+import npc.model.residences.fortress.FlagPoleInstance;
 import l2.gameserver.model.items.attachment.ItemAttachment;
 import l2.gameserver.network.l2.components.IStaticPacket;
 import l2.gameserver.network.l2.components.SystemMsg;
@@ -129,7 +131,9 @@ public class TakeCastle extends Skill
 
 	private static boolean isFlagPole(GameObject target)
 	{
-		return target instanceof StaticObjectInstance && ((StaticObjectInstance) target).getType() == 3;
+		// the retail type-3 static object, or the visible npc pole this build
+		// uses because the Classic client maps carry no flag pole prop
+		return target instanceof StaticObjectInstance && ((StaticObjectInstance) target).getType() == 3 || target instanceof FlagPoleInstance;
 	}
 
 	/** Ported from the H5 TakeFortress.checkCondition. */
@@ -206,9 +210,18 @@ public class TakeCastle extends Skill
 		if(siegeEvent == null)
 			return;
 
-		StaticObjectObject object = siegeEvent.getFirstObject(FortressSiegeEvent.FLAG_POLE);
-		if(object == null || ((StaticObjectInstance) flagPole).getUId() != object.getUId())
-			return;
+		if(flagPole instanceof FlagPoleInstance)
+		{
+			Fortress fortress = ((FlagPoleInstance) flagPole).getFortress();
+			if(fortress == null || fortress != siegeEvent.getResidence())
+				return;
+		}
+		else
+		{
+			StaticObjectObject object = siegeEvent.getFirstObject(FortressSiegeEvent.FLAG_POLE);
+			if(object == null || ((StaticObjectInstance) flagPole).getUId() != object.getUId())
+				return;
+		}
 
 		Log.add("TakeCastle[fortress]: caster: " + player.getName() + ", clan: " + player.getClan().getName() + ", fortress: " + siegeEvent.getName(), "fortress");
 		siegeEvent.processStep(player.getClan());

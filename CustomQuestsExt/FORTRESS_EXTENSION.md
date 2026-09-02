@@ -71,6 +71,16 @@ the start scripts in `l2horizon-server` prepend it explicitly
 - Only the 5-barrack fortresses define the `siege_minister` object, so its spawn
   actions are guarded by presence - 3-barrack sieges no longer log
   "Undefined objects: siege_minister".
+- The retail flag pole is a type-3 static object whose visual is a prop in the
+  client map files - and this build's Classic maps carry no such prop, leaving
+  the pole invisible and unclickable. `npc.model.residences.fortress.FlagPoleInstance`
+  (npc 90850, displayId 35062 - the siege Headquarters banner, spawned at the 21
+  retail pole spots via `spawn/fortress_flagpoles.xml`) provides a visible,
+  targetable pole; the TakeCastle override accepts it alongside the static object.
+  `FortressUtils.getFortress()` does its own null-zone-tolerant nearest-fortress
+  search because `ResidenceHolder.findNearestResidence` NPEs when residence zones
+  are not yet bound (zones bind in `Residence.init()`, which can run after
+  SpawnManager).
 
 ## Siege flow (retail H5 rules)
 
