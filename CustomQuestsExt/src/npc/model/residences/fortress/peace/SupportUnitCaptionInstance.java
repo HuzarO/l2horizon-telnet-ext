@@ -41,7 +41,17 @@ public class SupportUnitCaptionInstance extends NpcInstance
 		}
 
 		if(condition == COND_OWNER)
+		{
+			// this core has no sub-unit (squad) skill acquire path - AcquireType.SUB_UNIT
+			// exists but SkillAcquireHolder and the learn requests never handle it, so
+			// answer the retail dialog option honestly instead of swallowing the click
+			if(command.equalsIgnoreCase("SubUnitSkillList"))
+			{
+				showChatWindow(player, "fortress/SupportUnitCaptain-nosquad.htm");
+				return;
+			}
 			super.onBypassFeedback(player, command);
+		}
 	}
 
 	@Override

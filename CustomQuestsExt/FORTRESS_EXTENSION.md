@@ -73,14 +73,42 @@ the start scripts in `l2horizon-server` prepend it explicitly
   "Undefined objects: siege_minister".
 - The retail flag pole is a type-3 static object whose visual is a prop in the
   client map files - and this build's Classic maps carry no such prop, leaving
-  the pole invisible and unclickable. `npc.model.residences.fortress.FlagPoleInstance`
-  (npc 90850, displayId 35062 - the siege Headquarters banner, spawned at the 21
-  retail pole spots via `spawn/fortress_flagpoles.xml`) provides a visible,
-  targetable pole; the TakeCastle override accepts it alongside the static object.
+  the pole invisible and unclickable. The retail Flagpole npcs (35726-family,
+  imported with the staff and typed `npc.model.residences.fortress.FlagPoleInstance`)
+  stand at the pole spots as a visible, geodata-snapped, targetable pole; the
+  TakeCastle override accepts them alongside the static object.
   `FortressUtils.getFortress()` does its own null-zone-tolerant nearest-fortress
   search because `ResidenceHolder.findNearestResidence` NPEs when residence zones
   are not yet bound (zones bind in `Residence.init()`, which can run after
   SpawnManager).
+
+## Owner phase (staff, services, clan window)
+
+The first conversion missed the per-fortress staff blocks entirely; they are now
+imported from H5: 302 templates - Foreman (steward, the `Manager` residence
+functions npc), 3 Doormen per fortress (gate control via their `doors`
+ai_params + inner teleport), Logistics Officer, Detention Camp Warden,
+Engineering Manager, Wyvern Manager, Fortress Trap, generals, supply boxes,
+mercenary privates, the remaining machine/power units, and the retail Flagpole
+npcs (typed to `FlagPoleInstance`; the custom 90850 stand-in was retired).
+They spawn through `spawn/fortress_staff.xml` (always up, as in H5). The 18
+Territory-War npcs (dominion managers/catapult) are excluded - no dominion
+support on this build. The wardens' Rim Pailaka instance is not ported, so
+they are typed plain `Npc`.
+
+Support Unit Captain services: multisells 45300001/356482/356483/356484 are
+installed filtered to items this pack carries; `services.ObtainTalisman` (10
+Knight's Epaulettes for a random talisman) is ported with the pool filtered
+against ItemHolder at runtime (9 talismans exist today, more join
+automatically); the retail squad-skill option answers with an "unavailable"
+dialog because this core has no SUB_UNIT skill acquire path.
+
+`PledgeShowInfoUpdate` and `PledgeShowMemberListAll` are recreated with the
+fortress slot (after the hideout field) filled from fortress ownership, so the
+clan window shows the fortress as the clan's base.
+
+Note: the envoy refuses a castle contract while the related castle is
+unowned - that is retail behavior, not a bug; independence always works.
 
 ## Siege flow (retail H5 rules)
 
