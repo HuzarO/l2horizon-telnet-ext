@@ -3,6 +3,7 @@ package l2.gameserver.model.entity.events.objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import l2.gameserver.geodata.GeoEngine;
 import l2.gameserver.model.Creature;
 import l2.gameserver.model.GameObjectsStorage;
 import l2.gameserver.model.Player;
@@ -53,7 +54,7 @@ public class FortressCombatFlagObject implements SpawnableObject, FlagItemAttach
 		}
 		_item = item;
 		_item.setAttachment(this);
-		_item.dropMe(null, _location);
+		_item.dropMe(null, groundLocation());
 		_item.setDropTime(0);
 
 		_event = event;
@@ -101,7 +102,7 @@ public class FortressCombatFlagObject implements SpawnableObject, FlagItemAttach
 
 		owner.sendPacket(new SystemMessage(SystemMsg.YOU_HAVE_DROPPED_S1).addItemName(_item.getItemId()));
 
-		_item.dropMe(null, _location);
+		_item.dropMe(null, groundLocation());
 		_item.setDropTime(0);
 	}
 
@@ -159,6 +160,15 @@ public class FortressCombatFlagObject implements SpawnableObject, FlagItemAttach
 	public void setItem(ItemInstance item)
 	{
 		// ignored
+	}
+
+	/**
+	 * The H5 flag drop points sit on H5 terrain; snap to this pack's geodata so
+	 * the flags lie on the Classic client's ground instead of floating.
+	 */
+	private Location groundLocation()
+	{
+		return _location.clone().setZ(GeoEngine.getHeight(_location.x, _location.y, _location.z, 0));
 	}
 
 	public GlobalEvent getEvent()

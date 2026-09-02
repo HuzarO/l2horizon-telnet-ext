@@ -1,5 +1,6 @@
 package npc.model.residences.fortress;
 
+import l2.gameserver.geodata.GeoEngine;
 import l2.gameserver.model.Creature;
 import l2.gameserver.model.Player;
 import l2.gameserver.model.entity.residence.Fortress;
@@ -40,6 +41,12 @@ public class FlagPoleInstance extends NpcInstance
 	protected void onSpawn()
 	{
 		super.onSpawn();
+		// the retail H5 pole coordinates sit on H5 terrain; the Classic client's
+		// rebuilt fortress ground can differ (Hive: -2000 vs H5's -1942), so
+		// snap to this pack's own geodata height
+		int geoZ = GeoEngine.getHeight(getX(), getY(), getZ(), getGeoIndex());
+		if(geoZ != getZ())
+			setXYZ(getX(), getY(), geoZ);
 		getFortress();
 	}
 
