@@ -62,6 +62,15 @@ the start scripts in `l2horizon-server` prepend it explicitly
 - The castle-contract branch of `chanceCycle()` is kept verbatim but is unreachable:
   contract state can only change through envoy NPCs, which this chronicle's datapack
   does not contain.
+- The H5 event data pays virtual currencies through `give_item` with negative ids
+  (`ItemTemplate`: -100 PC points, -200 clan reputation, -300 fame, -500 raid points),
+  but this core implements only clan reputation and its stock `giveItem()` NPEs on
+  negative ids. `FortressSiegeEvent.giveItem()` pays out clan reputation and swallows
+  the rest; the fortress XMLs keep the retail -300 fame ticks (31 fame every 5
+  minutes of siege) in case a fame system is added later.
+- Only the 5-barrack fortresses define the `siege_minister` object, so its spawn
+  actions are guarded by presence - 3-barrack sieges no longer log
+  "Undefined objects: siege_minister".
 
 ## Siege flow (retail H5 rules)
 

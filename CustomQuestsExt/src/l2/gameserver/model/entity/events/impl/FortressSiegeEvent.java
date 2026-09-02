@@ -26,6 +26,7 @@ import l2.gameserver.network.l2.components.SystemMsg;
 import l2.gameserver.network.l2.s2c.PlaySound;
 import l2.gameserver.network.l2.s2c.SystemMessage;
 import l2.gameserver.scripts.Functions;
+import l2.gameserver.templates.item.ItemTemplate;
 
 /**
  * Fortress siege (impl="FortressSiege" in data/events/siege/[101]..[121]).
@@ -329,25 +330,66 @@ public class FortressSiegeEvent extends SiegeEvent<Fortress, SiegeClanObject>
 		}
 	}
 
+	/**
+	 * Only the four-star (5-barrack) fortresses field a minister barrack; the
+	 * 3-barrack events define no siege_minister object, so guard the spawn
+	 * actions to keep spawnAction() from logging "Undefined objects".
+	 */
+	private boolean hasMinister()
+	{
+		return !getObjects(SIEGE_MINISTER).isEmpty();
+	}
+
+	/**
+	 * The H5 event data pays out virtual currencies through give_item with
+	 * negative ids (-100 PC points, -200 clan reputation, -300 fame, -500 raid
+	 * points - see ItemTemplate). This core only implements clan reputation of
+	 * those, and the stock giveItem() feeds any id straight to ItemFunctions,
+	 * which NPEs on negatives. Pay out what the core supports, swallow the rest
+	 * (the fortress XMLs keep the retail -300 fame ticks for a future fame
+	 * system).
+	 */
+	@Override
+	public void giveItem(Player player, int itemId, long count)
+	{
+		if(itemId < 1)
+		{
+			switch(itemId)
+			{
+				case ItemTemplate.ITEM_ID_CLAN_REPUTATION_SCORE:
+					if(player.getClan() != null)
+						player.getClan().incReputation((int) count, false, "FortressSiege");
+					break;
+				default:
+					break;
+			}
+			return;
+		}
+		super.giveItem(player, itemId, count);
+	}
+
 	private void spawnCommanders()
 	{
 		SpawnExObject exObject = getFirstObject(SIEGE_COMMANDERS);
 		_barrackStatus = new boolean[exObject.getSpawns().size()];
 		spawnAction(SIEGE_COMMANDERS, true);
-		spawnAction(SIEGE_MINISTER, true);
+		if(hasMinister())
+			spawnAction(SIEGE_MINISTER, true);
 	}
 
 	private void unspawnCommanders()
 	{
 		spawnAction(SIEGE_COMMANDERS, false);
-		spawnAction(SIEGE_MINISTER, false);
+		if(hasMinister())
+			spawnAction(SIEGE_MINISTER, false);
 	}
 
 	public void spawnFlags()
 	{
 		doorAction(COMMANDER_DOORS, true);
 		spawnAction(SIEGE_COMMANDERS, false);
-		spawnAction(SIEGE_MINISTER, false);
+		if(hasMinister())
+			spawnAction(SIEGE_MINISTER, false);
 		spawnAction(COMBAT_FLAGS, true);
 
 		if(_oldOwner != null)
