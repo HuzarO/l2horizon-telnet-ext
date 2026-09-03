@@ -84,6 +84,13 @@ the start scripts in `l2horizon-server` prepend it explicitly
   search because `ResidenceHolder.findNearestResidence` NPEs when residence zones
   are not yet bound (zones bind in `Residence.init()`, which can run after
   SpawnManager).
+- The Classic geodata tile `21_25.l2g` had no Fortress Dungeon (Awl Under Foot,
+  instance zone 22, entry 53321/246314/-6452): the whole dungeon footprint was a
+  flat plane at -4672, so any teleport there snapped 1800 units up. The 64
+  dungeon blocks (bx 156-164, by 126-133) were merged in from High Five geodata
+  (`Zyno/L2J_Geodata_Hi5`, L2J format) - the dungeon geometry is the same in every
+  chronicle's client map - with every other block of the tile left byte-identical
+  (see `tools/geodata/` in the server repo to redo the merge from another source).
 
 ## Owner phase (staff, services, clan window)
 
