@@ -1,6 +1,7 @@
 package com.l2horizon.CustomQuestsExt;
 
 import com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand;
+import com.l2horizon.CustomQuestsExt.handlers.admin.MultisellAdminCommand;
 import com.l2horizon.CustomQuestsExt.listeners.FortressWorldInfoListener;
 import com.l2horizon.CustomQuestsExt.handlers.user.RollUserCommand;
 
@@ -17,6 +18,7 @@ public class CustomQuestsExt implements ScriptFile {
 
 		UserCommandHandler.getInstance().registerUserCommandHandler(new RollUserCommand());
 		AdminCommandHandler.getInstance().registerAdminCommandHandler(new FortressAdminCommand());
+		AdminCommandHandler.getInstance().registerAdminCommandHandler(new MultisellAdminCommand());
 
 		FortressDAO.getInstance().deleteStrayCombatFlags();
 		CharListenerList.addGlobal(new FortressWorldInfoListener());

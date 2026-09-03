@@ -29,6 +29,7 @@ This extension fills that gap. All recreated logic follows the L2Scripts High Fi
 | `npc.model.residences.fortress.*` (+`peace`/`siege`) | 16 NPC instance classes: steward (functions via the core ResidenceManager), doorman, Suspicious Merchant registration, peace captains, facility vendors (guard captain, logistics officer with Blood Oath rewards and supply boxes), envoy, main machine + power units mini-games, ballista, mercenary captain. |
 | `ai.residences.fortress.siege.*`, `ai.suspiciousmerchant.*` | 8 commander/machine AI classes and the 21 walking Suspicious Merchant route AIs. |
 | `com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand` | `//fortress`, `//fortress <id>`, `//fortress_set_owner <id> <clanName|npc>`. Registered in `CustomQuestsExt.onLoad()`. Needs `PlayerAccess.CanEditNPC` (same as `//residence`). |
+| `com.l2horizon.CustomQuestsExt.handlers.admin.MultisellAdminCommand` | `//multisell <listId>` opens a multisell for the GM without an npc (GMs are exempt from the merchant-range check when buying). Used by the GM Shop's Talismans page (`admin/gmshop/talismans.htm`: buy list 9284 and multisell 999955 with all 73 talismans). Needs `PlayerAccess.UseGMShop`, like `//gmshop`. |
 
 ## Core class overrides (classpath shadowing)
 
