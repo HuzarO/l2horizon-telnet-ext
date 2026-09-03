@@ -164,6 +164,13 @@ minions (25572-25595, converted from the H5 templates with the same rules as the
 staff import), items 9797 Dungeon Leader Mark, 9445 Dynasty Bow and 9587 Striped
 Scale Shirt (boss drops this pack lacked), and the 10 quest dialogs (en/ru).
 
+The bosses' Giant's Codex - Oblivion / Discipline / Mastery drops (9625-9627)
+have no use on this build - the core has no skill untrain, route change or
+blessed enchant, and its enchant data consumes only 6622 - so the warden also
+offers multisell 45700001, exchanging each of them for a Giant's Codex 1:1;
+the three templates carry the Giant's Codex reference price so they can be
+sold as well.
+
 Adaptations: the H5 quest script became this core's `Quest`/`ScriptFile`
 shape; entry goes through `ReflectionUtils.enterReflection`, whose
 `Reflection.init` also arms the time limit; the party is enrolled in the quest
