@@ -132,6 +132,38 @@ rode a restart inside someone's bag would otherwise become an ordinary
 tradeable weapon. `FortressWorldInfoListener` pushes `ExShowFortressInfo` at
 enter-world so the world map colors fortresses like castles.
 
+## Awl Under Foot (the fortress prison)
+
+The Detention Camp Warden's "I want to enter the prison" option is quest 511,
+ported from H5 as `quests._511_AwlUnderFoot` (registered from the ext jar like
+any scripts quest): a party of the owning clan - fortress independent, all
+members of that clan, level 60-85, 2-9 people - enters instance zone 22
+(`data/instances/[022] Fortress Dungeon.xml`, entry 53321/246314/-6452, 60
+minutes, one opening per fortress every four hours). Raid bosses spawn one after
+another at the prison spot: one of Hager the Outlaw / All-Seeing Rango / Jakard
+after a minute, then one of Helsing / Gillien / Medici / Immortal Muus three
+minutes after the first dies, then one of Brand the Exile / Commander Koenig /
+Gerg the Hunter. The last one pays 1000 Dungeon Leader Marks (9797) split across
+the party, the instance closes five minutes later, and the warden exchanges the
+marks for Knight's Epaulettes. The datapack carries the 10 bosses and their 14
+minions (25572-25595, converted from the H5 templates with the same rules as the
+staff import), items 9797 Dungeon Leader Mark, 9445 Dynasty Bow and 9587 Striped
+Scale Shirt (boss drops this pack lacked), and the 10 quest dialogs (en/ru).
+
+Adaptations: the H5 quest script became this core's `Quest`/`ScriptFile`
+shape; entry goes through `ReflectionUtils.enterReflection`, whose
+`Reflection.init` also arms the time limit; the party is enrolled in the quest
+before the entry check because the instance's `<quest id="511"/>` makes the
+core require the quest to be running on every member (H5 enrolled them right
+after entering). The wardens are typed
+`npc.model.residences.fortress.DetentionCampWardenInstance` so their retail
+"rumor about Rim Pailaka" option answers with a dialog: Rim Pailaka (instance
+80, entry 48200/-12232/-9128) and the castle dungeon of quest 512 (instance 13,
+entry 12154/-49190/-2657) are not ported - this build's geodata has no map for
+either spot (both are flat planes there), so they would need the same geodata
+and client-map work the fortress prison got (`tools/geodata/` in the server
+repo) before their scripts are worth porting.
+
 ## Siege flow (retail H5 rules)
 
 1. A clan (level 4+, no castle relation conflicts) registers at the fortress's walking
