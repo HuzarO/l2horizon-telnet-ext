@@ -86,10 +86,12 @@ the start scripts in `l2horizon-server` prepend it explicitly
   SpawnManager).
 - The Classic geodata tile `21_25.l2g` had no Fortress Dungeon (Awl Under Foot,
   instance zone 22, entry 53321/246314/-6452): the whole dungeon footprint was a
-  flat plane at -4672, so any teleport there snapped 1800 units up. The 64
-  dungeon blocks (bx 156-164, by 126-133) were merged in from High Five geodata
-  (`Zyno/L2J_Geodata_Hi5`, L2J format) - the dungeon geometry is the same in every
-  chronicle's client map - with every other block of the tile left byte-identical
+  flat plane at -4672, so any teleport there snapped 1800 units up. The tile was
+  merged from the L2J Mobius Vanguard `21_25.l2j` (the client map now in use):
+  the 64 dungeon blocks (bx 156-164, by 126-133; byte-identical to High Five
+  geodata, `Zyno/L2J_Geodata_Hi5`) plus 64 blocks of a second underground
+  structure at the same depth (x 55808-56960, y 238080-239104) that only the
+  Vanguard map has, with every other block of the tile left byte-identical
   (see `tools/geodata/` in the server repo to redo the merge from another source).
 
 ## Owner phase (staff, services, clan window)
