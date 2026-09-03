@@ -7,8 +7,11 @@ Blood Oath logistics. The data side lives in the `l2horizon-server` datapack (br
 `claude/lineage2-fortress-xml-files-2gvuuw`): residence/event/zone XMLs, 519 NPC templates,
 4800+ siege spawns, skills 3318/3358, and items: 9819 Combat Flag, 9910 Blood Oath,
 10031 Control Room Card (moved from H5's 10014, which this client uses for a D-grade
-enchant scroll), 9912 Knight's Epaulette + shirts 9579-9581 (guard drops) and 10212
-npc Only (Bow) - H5 items this pack was missing.
+enchant scroll), 9912 Knight's Epaulette + shirts 9579-9581 (guard drops), 10212
+npc Only (Bow), the 64 H5 talismans this pack lacked (9914-9965 less 9923, 10518/10519,
+10533-10543 - completing the 73-talisman Knight's Epaulette pool) with their 22 missing
+equip skills, and 10166 Hot Springs CP Potion + skill 2403 (conjured by the Orange
+Talisman) - H5 items this pack was missing.
 
 The core `server.jar` of this build has no fortress implementation - `ResidenceType.Fortress`
 exists, but there is no `Fortress` residence class and the fortress client packets are stubs.
@@ -99,9 +102,10 @@ they are typed plain `Npc`.
 Support Unit Captain services: multisells 45300001/356482/356483/356484 are
 installed filtered to items this pack carries; `services.ObtainTalisman` (10
 Knight's Epaulettes for a random talisman) is ported with the pool filtered
-against ItemHolder at runtime (9 talismans exist today, more join
-automatically); the retail squad-skill option answers with an "unavailable"
-dialog because this core has no SUB_UNIT skill acquire path.
+against ItemHolder at server start (all 73 H5 talismans exist since the
+datapack import; anything added later joins automatically); the retail
+squad-skill option answers with an "unavailable" dialog because this core
+has no SUB_UNIT skill acquire path.
 
 `PledgeShowInfoUpdate` and `PledgeShowMemberListAll` are recreated with the
 fortress slot (after the hideout field) filled from fortress ownership, so the
