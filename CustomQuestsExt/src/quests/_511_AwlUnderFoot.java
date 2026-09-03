@@ -24,6 +24,8 @@ import l2.gameserver.templates.InstantZone;
 import l2.gameserver.utils.Location;
 import l2.gameserver.utils.ReflectionUtils;
 
+import npc.model.residences.fortress.FortressUtils;
+
 /**
  * Awl Under Foot - the fortress prison (instance zone 22). Ported from the H5
  * _511_AwlUnderFoot: the owning clan's party enters through the Detention Camp
@@ -35,7 +37,10 @@ import l2.gameserver.utils.ReflectionUtils;
  * Adaptations to this core: entry goes through ReflectionUtils.enterReflection
  * (which also arms the instance time limit), and the party is enrolled in the
  * quest before the entry check because instance 22 requires the quest to be
- * running on every member.
+ * running on every member. The fortress is the one the warden stands in
+ * (nearest-fortress lookup, like every other fortress npc), falling back to
+ * the residence zone the player is in; asking to enter before accepting the
+ * quest shows the acceptance dialog instead of the "not a member" refusal.
  */
 public class _511_AwlUnderFoot extends Quest implements ScriptFile
 {
@@ -98,9 +103,11 @@ public class _511_AwlUnderFoot extends Quest implements ScriptFile
 		}
 		else if(event.equalsIgnoreCase("enter"))
 		{
-			if(!st.isStarted() || !check(st.getPlayer()))
+			if(!check(st.getPlayer(), npc))
 				return "gludio_fort_a_campkeeper_q0511_01a.htm";
-			return enterPrison(st.getPlayer());
+			if(!st.isStarted())
+				return "gludio_fort_a_campkeeper_q0511_01.htm";
+			return enterPrison(st.getPlayer(), npc);
 		}
 		return event;
 	}
@@ -108,7 +115,7 @@ public class _511_AwlUnderFoot extends Quest implements ScriptFile
 	@Override
 	public String onTalk(NpcInstance npc, QuestState st)
 	{
-		if(!check(st.getPlayer()))
+		if(!check(st.getPlayer(), npc))
 			return "gludio_fort_a_campkeeper_q0511_01a.htm";
 		if(st.isCreated())
 			return "gludio_fort_a_campkeeper_q0511_01.htm";
@@ -175,18 +182,26 @@ public class _511_AwlUnderFoot extends Quest implements ScriptFile
 		return null;
 	}
 
-	private boolean check(Player player)
+	private static Fortress getFortress(Player player, NpcInstance npc)
 	{
-		Fortress fort = ResidenceHolder.getInstance().getResidenceByObject(Fortress.class, player);
+		Fortress fort = npc == null ? null : FortressUtils.getFortress(npc);
+		if(fort == null)
+			fort = ResidenceHolder.getInstance().getResidenceByObject(Fortress.class, player);
+		return fort;
+	}
+
+	private boolean check(Player player, NpcInstance npc)
+	{
+		Fortress fort = getFortress(player, npc);
 		if(fort == null)
 			return false;
 		Clan clan = player.getClan();
 		return clan != null && clan.getClanId() == fort.getOwnerId();
 	}
 
-	private String enterPrison(Player player)
+	private String enterPrison(Player player, NpcInstance npc)
 	{
-		Fortress fort = ResidenceHolder.getInstance().getResidenceByObject(Fortress.class, player);
+		Fortress fort = getFortress(player, npc);
 		if(fort == null || fort.getOwner() != player.getClan())
 			return "gludio_fort_a_campkeeper_q0511_01a.htm";
 		if(fort.getContractState() != Fortress.INDEPENDENT)
