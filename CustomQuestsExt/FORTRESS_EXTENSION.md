@@ -116,6 +116,19 @@ datapack import; anything added later joins automatically); the retail
 squad-skill option answers with an "unavailable" dialog because this core
 has no SUB_UNIT skill acquire path.
 
+Talisman skills: the Classic pack and the client already carried skill ids
+3271-3294 with Essence-era content (3271 "Blue Talisman - P. Crit.", 3285 "Grey
+Talisman - Gravity", ...) that no item referenced, while the H5 talisman
+templates bind those ids to different skills - equipping a talisman applied
+the wrong effect and showed the wrong name. The server now carries the H5
+definitions for 3271-3294 (`stats/skills/3200-3299.xml`), and the client
+SkillName/Skillgrp rows for those ids were rewritten to match (named after the
+talisman that grants them); the client's own item descriptions already
+described the H5 effects. The talisman Armorgrp rows also moved from
+`body_part=underwear` (an Essence leftover) to `deco1`, the talisman slot the
+server equips them into. Skills whose meaning already matched (3295-3299,
+3410, 3428-3438, 3487-3497) keep the pack's own tuning.
+
 `PledgeShowInfoUpdate` and `PledgeShowMemberListAll` are recreated with the
 fortress slot (after the hideout field) filled from fortress ownership, so the
 clan window shows the fortress as the clan's base.
