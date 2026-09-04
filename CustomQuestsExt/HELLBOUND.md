@@ -1,80 +1,84 @@
-# Hellbound (Essence version)
+# Hellbound Island (High Five port)
 
-The Hellbound island in the client maps in use is the Classic-era build
-(package version 133, `T_19_25_Classic` / `T_20_25_Classic` terrain), not the
-High Five one, so the zone is ported from the content made for that map: the
-L2J Mobius Essence 6.2 Vanguard pack (`spawns/Hellbound/Hellbound.xml`,
-`ai/areas/Hellbound/*`, `teleporters/others/Hellbound.xml`,
-`TeleportListData.xml`, `zones/teleportzones.xml`, the NPC, item and skill
-templates). Geodata for 19_25 / 20_25 comes from the same pack (see
-`tools/geodata/README.md` in the server repository).
+The island surface and the Steel Citadel exterior of High Five Hellbound,
+ported from L2Scripts 2268 onto this Classic core. The Steel Citadel interior
+(Tully's Workshop, Tower of Infinitum, Naia, Beleth) and the Urban Area
+instance are **not** part of it: the trust stage is capped at 9.
 
-## Server datapack (l2horizon-server)
+## Layout
 
-- `data/npc/18500-18599.xml`, `18900-18999.xml`, `22300-22399.xml`,
-  `25900-25999.xml`, `34100-34199.xml`, `34200-34299.xml`: the 31 NPC
-  templates. Level 85 monsters Twilight Witch / Warrior (22313-22314),
-  Demonic Wizard / Warrior (22315-22316), Old / Hunting / Bloody / Rueful
-  Vampire (22317-22320), Steel Warrior / Worker / Stalker / Swordsman
-  (22336-22339), Zamad, Vegskytt, Shisuck, Drayzak, Beleth' Eye (22340-22344),
-  Otherworldly Shard (18554), the invisible marker 18919; raid bosses Deiman
-  (25933), Satina (25934), Ryuminir (25936), Aizen Kelsour (25937); the Elite
-  Wizards of the Ivory Tower Camp (34190, 34191, 34198-34200), Mastie (34192),
-  Creanir (34193) and the Warp Gate (34201). Stats, skills, drops and spoils
-  are the Vanguard values; Mobius per-item drop chances became one
-  RATED_GROUPED group per item. Essence Asofe / Thons (92994 / 92995) are
-  the Classic items of the same name (4043 / 4044). The Elite Wizards are
-  plain NPCs here (Vanguard marks them attackable Folk, which would give free
-  XP), and the raids have no XP reward because the Vanguard templates carry
-  none.
-- `data/spawn/hellbound.xml`: the 1539 fixed spawns (respawn 60 s). The
-  Vanguard file also spawns Deiman once more with a 60 s respawn; that line
-  is left out because the raid script owns him.
-- `data/items/94700-94799.xml`: Hellbound Ring (94718, M. Def. 44, passive
-  50468) and Scroll: Enchant Hellbound Ring (94719); `enchant_items.xml`
-  restricts the scroll to the ring, +0 to +10, with the Vanguard
-  HELLBOUND_RING rates (100 90 80 60 50 40 30 20 10 5), failure destroys the
-  ring. `data/items/95500-95599.xml` + `capsule_items.xml`: Adena Pouch
-  (95569, 10k-300k adena).
-- `data/stats/skills/50400-50499.xml`: Hellbound Ring passive 50468 with all
-  11 Essence levels (paralysis resistance, Max HP, P./M. Atk., DEX/WIT); the
-  core cannot raise an item skill per enchant level (only `enchant4_skill`
-  exists), so the ring grants level 1 at every enchant and the enchant adds
-  the usual M. Def. bonus. `14700-14799.xml` and `48000-48099.xml`: the
-  marker passives Blood Siphon Resistance and Fire / Wind / Earth Attribute
-  Monster used by the templates.
-- Not ported, since the systems do not exist in this core: the craft-point
-  materials 92915 / 92916 / 92999 (Bag of Low-grade Stuff, Animal Spirit,
-  High-grade Resources), Talisman of Hellbound Fragment (94716) and
-  Hellbound Energy (94717). They are dropped from the reward lists.
-- Entry: Gatekeeper Tamil in Oren (30576) got `Hellbound Island (Lv. 85+)`
-  (7730 250566 -1800, the Ivory Tower Camp, 20000 adena, `min_level` 85;
-  strings `Gatekeeper.HellboundIsland` in `data/string`). Essence sends
-  players there through its teleport UI (TeleportListData 438-442).
-- `html-*/default/34201.htm`: the Warp Gate, `scripts_Util:Gatekeeper` to
-  Satina's Laboratory (8884 242700 -2292), Beleth's Magic Circle
-  (4361 239303 -3032) and the Otherworldly Tower East / South
-  (21839 253159 -1756 / 14960 250112 -1593).
-- `data/zone/dummy.xml`: `[hellbound_tp_1]`..`[hellbound_tp_4]`, the four
-  portal spots in the Ivory Tower basement (400x400 around the Vanguard
-  cylinder centres, z -3600..-3300).
+| Part | Where |
+|------|-------|
+| Trust manager, config | `src/com/l2horizon/CustomQuestsExt/hellbound/HellboundManager.java`, `HellboundConfig.java` |
+| NPC instances | `src/npc/model/{CaravanTrader,Warpgate,QuarrySlave,HellboundRemnant,NativeCorpse,Sandstorm,ImmuneMonster}Instance.java` |
+| AI | `src/ai/hellbound/{Chimera,Leodas,OutpostCaptain,OutpostGuards,Pylon,Sandstorm,Typhoon}.java` |
+| Entry quests | `src/quests/_130_PathToHellbound.java`, `_131_BirdInACage.java`, `_133_ThatsBloodyHot.java` |
+| Holy Water | `src/handler/items/HolyWater.java` |
+| Commands | `handlers/admin/HellboundAdminCommand.java` (`//hbadd`, `//hbsub`, `//hbset`, `//hbinfo`), `handlers/voice/HellboundVoiceCommand.java` (`.hellbound`) |
+| Datapack | `gameserver/data/hellbound_spawnlist.xml`, `npc/18400-18499.xml`, `22300-22399.xml`, `22400-22499.xml`, `32300-32399.xml` (+ entries in `13000-13099`, `25500-25599`, `32200-32299`), `spawn/hellbound_static.xml`, `doors/19_25.xml`, `20_25.xml`, `zone/dummy.xml` (`[Hellbound_territory]`), `html-*/hellbound/`, `html-*/quests/_13x*`, `multisell/250980013-14, 323472-4`, `config/custom/hellbound.properties` |
+| Generators | `tools/hellbound/gen_hellbound_h5.py`, `tools/hellbound/gen_dynasty_h5.py` (server repo) |
 
-## Extension scripts
+The manager loads as a script (`ScriptFile.onLoad`) once the world is up, reads
+`data/hellbound_spawnlist.xml`, spawns the entries of the current stage,
+attaches its death listener to every spawned NPC and re-checks the stage every
+`HellboundStageCheckMinutes`.
 
-- `ai.hellbound.HellboundRaids`: spawns each raid boss at one of its two
-  Vanguard spots and, on death, at a random spot again after 120 minutes
-  (Ryuminir 60), like the Vanguard Deiman / Satina / Ryuminir / Aizen AIs.
-  Spawned with `NpcUtils.spawnSingle`, so a restart respawns them at once.
-- `services.HellboundPortal`: `OnZoneEnterLeaveListener` on the four portal
-  zones; on Saturdays a level 85+ character entering one is moved to the
-  matching camp spot (6736 251024 -1795 etc.), like the Vanguard
-  `IvoryTowerTeleportZones` + TeleportZone pair.
+## Trust stages
 
-## Client
+Trust points live in `ServerVariables` (`HellboundConfidence`, `HB_judesBoxes`,
+`HB_bernardBoxes`, `HB_derekKilled`, `HB_captainKilled`), thresholds are retail:
 
-The NPCs, the ring, the scroll, the pouch and skill 50468 need their rows in
-the Classic dat files (NpcName / Npcgrp, ItemName / Armorgrp / EtcItemgrp,
-SkillName / Skillgrp) and the NPC model packages; all of it comes from the
-Vanguard client the maps were taken from. The Essence-flavored dat exports
-merged earlier predate Vanguard (22313 is still Garden Stakato there), so
-the rows must be exported from the Vanguard client itself.
+| Stage | Trust | Content |
+|------:|------:|---------|
+| 0 | 0 | closed; the warpgate opens the island (stage 1) for the first player who finished *Path to Hellbound* |
+| 1 | 1 – 300k | harbor, quarry, Typhoon, Junior/Blind/Arcane demons (+1/+3 per kill); natives and Quarry Slaves killed cost -10 |
+| 2 | 300k – 600k | Remnant Diabolist/Diviner appear (+5 with Holy Water) |
+| 3 | 600k – 1M | Darion's Enforcers/Executioners (+3), Keltas (+100) |
+| 4 | 1M – 1.2M | needs Jude's 40 Native Treasures and Bernarde's box; Derek (+10000) |
+| 5 | 1M – 1.2M, Derek dead | Native village opens (doors 19250001/2), Leodas, Quarry Slaves can be rescued (+10), Traitor opens the cells for 10 Marks of Betrayal |
+| 6 | 1.2M – 1.5M | Hellinark (+500) with Naia Failan pylons and Failan's Guards |
+| 7 | 1.5M – 1.8M | citadel exterior gate (20250002), chimeras and Celtus (Magic Bottle at <10% HP drops life force) |
+| 8 | 1.8M – 2.1M | Outpost Captain and guards (+10000) |
+| 9 | 1.8M – 2.1M, captain dead | Hell gate (20250001) opens; Native Slave accepts badges. Highest stage on this server. |
+
+Kief exchanges life forces for trust (+100/+100/+50), Falk exchanges Darion's
+Badges (10 per badge) and sells the First Mark, Hude trades the marks and the
+S80 materials (Hidden First/Second Page, Demon Contract Fragment) for sealed
+Dynasty gemstones and recipes (multisell 250980013), Shadai turns Ancient Tomes
+of the Demon into Dynastic Essence (323472) and switches Dynasty class armor
+variants (323473/323474). Bernarde talks only to players wearing the Native
+transformation (set 9669/9670/9671, skill 3359).
+
+## Adaptations to this core
+
+* `Config.HELLBOUND_LEVEL` / `RATE_HELLBOUND_CONFIDENCE` became
+  `config/custom/hellbound.properties` (`HellboundMinLevel`,
+  `RateHellboundConfidence`, plus `HellboundMaxLevel` = 9 and the check interval).
+* H5 template keys converted by the generator: `NpcAI` → `CharacterAI`,
+  `basePCritRate` → `baseCritRate`, `basePHitModify`/`basePAvoidModify` →
+  `physicalHitModify`/`physicalAvoidModify`, `baseMAtkSpd` added, integer
+  combat stats, `male;female` collision values reduced to one, `faction names`
+  → `name`, `use_type` dropped from skills. H5 attribute stones (9546-9551) and
+  item 13099 are not on this server and were removed from the drop lists; the
+  lvl 80 life stones became 90012-90015.
+* Quest completion checks use the quest class names
+  (`player.isQuestCompleted("_130_PathToHellbound")`), quest dialogs are
+  dispatched as `bypass -h Quest <name> <file>`.
+* `ItemFunctions.addItem/removeItem/getItemCount` replace the H5 inventory
+  helpers; `NpcHtmlMessage` replaces `NpcHtmlMessagePacket`.
+* Citadel bypasses (`tully_entrance`, `enter_urban`) answer with the closed
+  dialogs; Deltuva and Kanaf stay on the island as in H5.
+* The stage-10/11 spawn entries (22396-22399, 22403) were removed from the
+  spawn list; Jerian (32302) and Dorian (32373) are not spawned.
+
+## Dynasty
+
+`gen_dynasty_h5.py` adds every High Five Dynasty item (weapons with SA and PvP
+variants, armor with class variants, jewelry, sealed pieces, recipes, parts,
+gemstones, Foundation items, sigils; the event "of Friendship" sets and the
+unused jewelry are left out), the 31 retail recipes (ids 872-875 collide with
+the pack's custom recipes and were moved to 950-953), the armor sets (ids
+65-72 moved to 200-207, the Native set is 208) and the item/set skills the pack
+lacked. Ten standard SA skills (3009, 3027, 3057, 3066, 3552, 3564, 3565, 3566,
+3573, 3600) were replaced by their H5 definitions because the Dynasty weapons
+use higher levels of them.
