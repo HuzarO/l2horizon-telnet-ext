@@ -8,7 +8,7 @@ tier, a level 85 tier above Hero. The other five tiers are untouched.
 | Part | Where |
 |------|-------|
 | Entry NPC | 31488 is *Rift Post Legend* (server template and client `NpcName`); it still sends `EnterRift 1` |
-| Cost | `RecruitFC = 36` fragments (Hero is 33); `RiftMaxPartiesRecruit` limits the Legend rifts |
+| Cost | `RecruitFC = 99` fragments (Hero is 33); `RiftMaxPartiesRecruit` limits the Legend rifts |
 | Rooms | `gameserver/data/dimensional_rift.xml`, area type 1: rooms 1-8 spawn the Infernal Invaders in the Hero room layout, room 9 is Anakazel |
 | Monsters | `gameserver/data/npc/40100-40199.xml`: 23 *Infernal Invader* templates (40100-40122) and Anakazel 40123 |
 | Dialogs | `html-*/default/3148[89]-2.htm`, `3149[0-3]-2.htm` and `html-*/quests/_635_InTheDimensionalRift/5.htm` describe the tiers without the recruits |
