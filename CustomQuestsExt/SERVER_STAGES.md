@@ -15,7 +15,7 @@ shadowed for it.
 | Player hooks | `stages/StageListener.java` (login, level up, admin set level, subclass switch) |
 | Admin | `handlers/admin/StageAdminCommand.java`, page `html-en/admin/stages.htm` (button *Stages* on the main admin page) |
 | Players | `handlers/voice/StageVoiceCommand.java`: `.stage` opens `html-*/mods/stages/stage.htm` |
-| Band passives | `gameserver/data/stats/skills/40200-40299.xml`: 40200 *Server Stage - EXP*, 40201 *Server Stage - SP*, 200 levels (level = percent) |
+| Band passives | `gameserver/data/stats/skills/40200-40299.xml`: 40200 *Server Stage - EXP*, 40201 *Server Stage - SP*, 40 levels in steps of 0.05 (level 20 = x1.00) |
 | Strings | `stages.*` and `common.MultisellForbidden` in `data/string/strings_en.properties`, `strings_ru.properties` |
 | Generators | `tools/stages/gen_stage_skill_rows.py` (client rows) in the server repo |
 
@@ -48,8 +48,10 @@ GM characters.
 
 `StageN.ExpBands = 1-40:1.0, 41-52:0.5, ...` (and optional `SpBands`) give the
 multiplier per level band. The extension gives the player skill 40200/40201 at
-the level that equals the factor in percent (x0.50 = level 50, x1.50 = level
-150) and removes it when the factor is 1.0. The skills multiply
+the level of the factor in steps of 0.05 (x0.50 = level 10, x1.50 = level 30;
+factors are rounded to the nearest 0.05) and removes it when the factor is
+1.0. The client only knows skill levels up to 85 and treats levels above 100
+as enchant routes, hence the coarse grid. The skills multiply
 `ExpMultiplier`/`SpMultiplier` (and the raid variants), so they stack with
 premium and party rates. They are refreshed at login, on level up, on an admin
 level change and on a subclass switch; `//stagebands` refreshes everybody.

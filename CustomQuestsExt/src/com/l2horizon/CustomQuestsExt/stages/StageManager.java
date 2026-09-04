@@ -55,7 +55,10 @@ public class StageManager
 	private static final Logger _log = LoggerFactory.getLogger(StageManager.class);
 	public static final String VAR_STAGE = "ServerStage";
 	private static final Pattern VARIANT = Pattern.compile("^(.+)-(\\d+)$");
-	private static final int MAX_SKILL_LEVEL = 200;
+	/** the band passives have 40 levels in steps of 0.05; level 20 is x1.00 */
+	private static final int MAX_SKILL_LEVEL = 40;
+	private static final double SKILL_STEP = 0.05;
+	private static final int NEUTRAL_LEVEL = 20;
 
 	private static StageManager _instance;
 
@@ -247,9 +250,9 @@ public class StageManager
 
 	private static boolean setFactorSkill(Player player, int skillId, double factor)
 	{
-		int level = (int) Math.round(factor * 100.0);
+		int level = (int) Math.round(factor / SKILL_STEP);
 		int current = player.getSkillLevel(Integer.valueOf(skillId));
-		if(level == 100 || level <= 0)
+		if(level == NEUTRAL_LEVEL || level <= 0)
 		{
 			if(current > 0)
 			{
