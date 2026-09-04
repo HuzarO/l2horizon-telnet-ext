@@ -98,3 +98,12 @@ the pack's custom recipes and were moved to 950-953), the armor sets (ids
 lacked. Ten standard SA skills (3009, 3027, 3057, 3066, 3552, 3564, 3565, 3566,
 3573, 3600) were replaced by their H5 definitions because the Dynasty weapons
 use higher levels of them.
+
+Dynasty is the level 80 tier of this server, so its 486 equipment pieces are
+grade **S80** (High Five itself lists Dynasty as S; S80 there is Icarus). The
+grade is a data row in `crystal_grades.xml`: same crystal (1462), enchant
+scrolls, shots, arrows and enchant bonus as S (`externalOrdinal` 5), but as the
+seventh grade it needs Expertise S80, skill 239 level 6, which the core grants
+at level 80 (`experienceLevel`) and the skill tree lists at 80. Wearing it
+earlier gives the usual grade penalty. Client: `crystal_type=s80` on the
+Dynasty Armorgrp/Weapongrp rows and the Expertise S80 skill rows.
