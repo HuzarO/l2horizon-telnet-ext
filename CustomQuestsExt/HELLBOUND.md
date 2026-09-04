@@ -120,7 +120,17 @@ the Merchant of Mammon) and exchange Masterwork upper armor
 covers the Dynasty SA weapons. Added for it: Soul Crystals stage 14
 (9570-9572, levelled from stage 13 on Typhoon as in H5), Mammon's Varnish
 Enhancer (12374) and the Dynasty Dual Sword as item 40000 (H5 10004 is the
-pack's Crystal Scroll: Enchant Armor (Grade A)). The Test Server Helper (quest 700) sells the
+pack's Crystal Scroll: Enchant Armor (Grade A)).
+
+Soul crystals: `src/quests/_350_EnhanceYourWeapon.java` shadows the scripts.jar
+quest (the extension jar precedes it on the classpath): the quest starts at
+level 1 and takes its crystal lists from `soul_crystals.xml` (stages 0-14, the
+stage 14 items are registered with no next stage), so the masters' dialogs and
+"give up" know every stage. Every `<absorb>` entry of the datapack has
+`skill="false"` (no Drain Soul needed) and the epic bosses (Queen Ant, Core,
+Orfen, Zaken, Baium, Antharas, Valakas, Scarlet van Halisha, Sailren, Lilith,
+Anakim) allow stage 14. Horizon Manager Erica hands out the stage 0 crystals
+(Consumables, multisell 999011). The Test Server Helper (quest 700) sells the
 normal Dynasty weapons, armor, jewelry and sealed pieces, the recipes and
 parts, the 73 talismans and the six talisman bracelets (multisells 999906,
 999916, 999919, 999927, 999956-999958).
