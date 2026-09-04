@@ -9,9 +9,10 @@ import l2.gameserver.scripts.ScriptFile;
 
 /**
  * Bird in a Cage (131). Ported from the High Five _131_BirdInACage: Priest
- * Kanis on the Isle of Prayer sends the player to Parme, imprisoned inside the
- * Crystal Caverns; her letter and Kanis' echo crystal complete it. One-time,
- * level 78+, prerequisite of That's Bloody Hot.
+ * Kanis sends the player to Parme, the imprisoned witch; her letter and Kanis'
+ * echo crystal complete it. One-time, level 78+, prerequisite of That's Bloody
+ * Hot. This world has no Isle of Prayer, so Kanis stands at the Heine harbor
+ * and Parme at the Garden of Eva (spawn/hellbound_static.xml).
  */
 public class _131_BirdInACage extends Quest implements ScriptFile
 {
@@ -57,7 +58,8 @@ public class _131_BirdInACage extends Quest implements ScriptFile
 			st.setCond(3);
 			st.giveItems(PARMES_LETTER, 1, false);
 			st.playSound(SOUND_MIDDLE);
-			st.getPlayer().teleToLocation(143472 + Rnd.get(-100, 100), 191040 + Rnd.get(-100, 100), -3696, ReflectionManager.DEFAULT);
+			// back to Kanis (Heine harbor on this server; the Isle of Prayer is not part of the world)
+			st.getPlayer().teleToLocation(111800 + Rnd.get(-100, 100), 219640 + Rnd.get(-100, 100), -3664, ReflectionManager.DEFAULT);
 		}
 		else if(event.equals("priest_kanis_q0131_17.htm") && cond == 3)
 		{
@@ -74,8 +76,8 @@ public class _131_BirdInACage extends Quest implements ScriptFile
 		else if(event.equals("meet") && cond == 2)
 		{
 			// H5 sent the player into the Crystal Caverns instance here; on this
-			// server Parme stands in the Sea Dragon cave under the Isle of Prayer
-			st.getPlayer().teleToLocation(149430, 173498, -5016, ReflectionManager.DEFAULT);
+			// server Parme stands at the entrance of the Garden of Eva
+			st.getPlayer().teleToLocation(84413, 234334, -3680, ReflectionManager.DEFAULT);
 			return null;
 		}
 

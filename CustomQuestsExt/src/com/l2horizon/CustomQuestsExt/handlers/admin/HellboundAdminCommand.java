@@ -68,7 +68,8 @@ public class HellboundAdminCommand implements IAdminCommandHandler
 		PLACES.put("warpgate", new Location(112053, 219594, -3674)); // Heine harbor warpgate
 		PLACES.put("galate", new Location(112020, 219530, -3674));
 		PLACES.put("casian", new Location(-16895, 194229, -4207));
-		PLACES.put("kanis", new Location(143472, 191040, -3712)); // Isle of Prayer
+		PLACES.put("kanis", new Location(111800, 219640, -3664)); // Heine harbor
+		PLACES.put("parme", new Location(84413, 234334, -3680)); // Garden of Eva entrance
 	}
 
 	@Override
