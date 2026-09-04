@@ -17,7 +17,7 @@ shadowed for it.
 | Players | `handlers/voice/StageVoiceCommand.java`: `.stage` opens `html-*/mods/stages/stage.htm` |
 | Band passives | `gameserver/data/stats/skills/40200-40299.xml`: 40200 *Server Stage - EXP*, 40201 *Server Stage - SP*, 200 levels (level = percent) |
 | Strings | `stages.*` and `common.MultisellForbidden` in `data/string/strings_en.properties`, `strings_ru.properties` |
-| Generators | `tools/stages/gen_catchup_lists.py` (Erica's lists), `tools/stages/gen_stage_skill_rows.py` (client rows) in the server repo |
+| Generators | `tools/stages/gen_stage_skill_rows.py` (client rows) in the server repo |
 
 ## Choosing the stage
 
@@ -69,8 +69,7 @@ Shipped versions:
 * Blacksmith of Mammon: `ssq_*_for_a` -> `-3`, `ssq_*_for_s` -> `-4`,
   `ssq_*_for_s80`, `ssq_foundation_for_s80`, `ssq_rare_exchange_for_s80` -> `-5`
   (unseal, exchange, dual-sword, SA and Foundation services open with the grade).
-* Horizon Manager Erica: *Catch-up Equipment* (`999012`): `999012-3.xml` sells
-  the C-grade weapons and armors, `-4` adds B-grade, `-5` adds A-grade, at the
-  item's reference price (generated from the Test Server Helper lists; weapons
-  with a special ability left out; below the reference price the core flags a
-  crystallization exploit).
+* Any other list works the same way: add `X-N.xml` next to `X.xml`, or
+  without an `X.xml` when the list should not exist below stage N. (A catch-up
+  gear list for Erica was tried and removed; the core flags prices below the
+  item reference price as a crystallization exploit.)
