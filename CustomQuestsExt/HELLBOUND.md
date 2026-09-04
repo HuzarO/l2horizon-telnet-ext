@@ -14,7 +14,7 @@ instance are **not** part of it: the trust stage is capped at 9.
 | AI | `src/ai/hellbound/{Chimera,Leodas,OutpostCaptain,OutpostGuards,Pylon,Sandstorm,Typhoon}.java` |
 | Entry quests | `src/quests/_130_PathToHellbound.java`, `_131_BirdInACage.java`, `_133_ThatsBloodyHot.java` |
 | Holy Water | `src/handler/items/HolyWater.java` |
-| Commands | `handlers/admin/HellboundAdminCommand.java` (`//hbadd`, `//hbsub`, `//hbset`, `//hbinfo`), `handlers/voice/HellboundVoiceCommand.java` (`.hellbound`) |
+| Commands | `handlers/admin/HellboundAdminCommand.java` (`//hbadd`, `//hbsub`, `//hbset`, `//hbinfo`; a changed stage is applied at once), `handlers/voice/HellboundVoiceCommand.java` (`.hellbound`) |
 | Datapack | `gameserver/data/hellbound_spawnlist.xml`, `npc/18400-18499.xml`, `22300-22399.xml`, `22400-22499.xml`, `32300-32399.xml` (+ entries in `13000-13099`, `25500-25599`, `32200-32299`), `spawn/hellbound_static.xml`, `doors/19_25.xml`, `20_25.xml`, `zone/dummy.xml` (`[Hellbound_territory]`), `html-*/hellbound/`, `html-*/quests/_13x*`, `multisell/250980013-14, 323472-4`, `config/custom/hellbound.properties` |
 | Generators | `tools/hellbound/gen_hellbound_h5.py`, `tools/hellbound/gen_dynasty_h5.py` (server repo) |
 

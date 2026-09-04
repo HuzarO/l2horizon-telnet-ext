@@ -439,22 +439,32 @@ public class HellboundManager implements ScriptFile
 		}
 	}
 
+	/**
+	 * Re-reads the stage and, when it changed, replaces the island's spawns
+	 * and door states. Runs every HellboundStageCheckMinutes and right after
+	 * the //hb* admin commands change the trust points.
+	 */
+	public synchronized void checkStage()
+	{
+		if(!_initialized)
+			return;
+		int level = getHellboundLevel();
+		if(_initialStage != level)
+		{
+			despawnHellbound();
+			spawnHellbound();
+			doorHandler();
+			_initialStage = level;
+			_log.info("HellboundManager: stage changed to " + _initialStage);
+		}
+	}
+
 	private class StageCheckTask extends RunnableImpl
 	{
 		@Override
 		public void runImpl() throws Exception
 		{
-			synchronized(HellboundManager.this)
-			{
-				if(_initialStage != getHellboundLevel())
-				{
-					despawnHellbound();
-					spawnHellbound();
-					doorHandler();
-					_initialStage = getHellboundLevel();
-					_log.info("HellboundManager: stage changed to " + _initialStage);
-				}
-			}
+			checkStage();
 		}
 	}
 

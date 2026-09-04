@@ -7,9 +7,8 @@ import com.l2horizon.CustomQuestsExt.hellbound.HellboundManager;
 
 /**
  * //hbadd <points>, //hbsub <points>, //hbset <points>, //hbinfo - Hellbound
- * trust administration. Ported from the High Five AdminHellbound; the stage
- * follows the points on the next check of the manager (every few minutes).
- * Requires PlayerAccess.Menu.
+ * trust administration. Ported from the High Five AdminHellbound; the island
+ * is respawned for the new stage immediately. Requires PlayerAccess.Menu.
  */
 public class HellboundAdminCommand implements IAdminCommandHandler
 {
@@ -56,6 +55,7 @@ public class HellboundAdminCommand implements IAdminCommandHandler
 				default:
 					break;
 			}
+			HellboundManager.getInstance().checkStage();
 		}
 		activeChar.sendMessage("Hellbound trust is now " + HellboundManager.getConfidence() + ", stage " + HellboundManager.getHellboundLevel());
 		return true;
