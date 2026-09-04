@@ -2,8 +2,11 @@ package com.l2horizon.CustomQuestsExt;
 
 import com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.admin.HellboundAdminCommand;
+import com.l2horizon.CustomQuestsExt.handlers.admin.StageAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.admin.MultisellAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.voice.HellboundVoiceCommand;
+import com.l2horizon.CustomQuestsExt.handlers.voice.StageVoiceCommand;
+import com.l2horizon.CustomQuestsExt.stages.StageManager;
 import com.l2horizon.CustomQuestsExt.listeners.FortressWorldInfoListener;
 import com.l2horizon.CustomQuestsExt.handlers.user.RollUserCommand;
 
@@ -24,6 +27,9 @@ public class CustomQuestsExt implements ScriptFile {
 		AdminCommandHandler.getInstance().registerAdminCommandHandler(new MultisellAdminCommand());
 		AdminCommandHandler.getInstance().registerAdminCommandHandler(new HellboundAdminCommand());
 		VoicedCommandHandler.getInstance().registerVoicedCommandHandler(new HellboundVoiceCommand());
+		AdminCommandHandler.getInstance().registerAdminCommandHandler(new StageAdminCommand());
+		VoicedCommandHandler.getInstance().registerVoicedCommandHandler(new StageVoiceCommand());
+		StageManager.getInstance().load();
 
 		FortressDAO.getInstance().deleteStrayCombatFlags();
 		CharListenerList.addGlobal(new FortressWorldInfoListener());
