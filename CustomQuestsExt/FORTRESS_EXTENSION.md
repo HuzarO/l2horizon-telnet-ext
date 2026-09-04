@@ -117,18 +117,18 @@ datapack import; anything added later joins automatically); the retail
 squad-skill option answers with an "unavailable" dialog because this core
 has no SUB_UNIT skill acquire path.
 
-Talisman skills: the Classic pack and the client already carried skill ids
-3271-3294 with Essence-era content (3271 "Blue Talisman - P. Crit.", 3285 "Grey
-Talisman - Gravity", ...) that no item referenced, while the H5 talisman
-templates bind those ids to different skills - equipping a talisman applied
-the wrong effect and showed the wrong name. The server now carries the H5
-definitions for 3271-3294 (`stats/skills/3200-3299.xml`), and the client
-SkillName/Skillgrp rows for those ids were rewritten to match (named after the
-talisman that grants them); the client's own item descriptions already
-described the H5 effects. The talisman Armorgrp rows also moved from
-`body_part=underwear` (an Essence leftover) to `deco1`, the talisman slot the
-server equips them into. Skills whose meaning already matched (3295-3299,
-3410, 3428-3438, 3487-3497) keep the pack's own tuning.
+Talisman skills: retail High Five binds the 24 talismans 9914-9959 to skill
+ids 3271-3294, but on Classic those ids belong to the Blue/White/Grey/Yellow
+event talismans (items 29753-29784 and 49600-49629, passive multi-level skills
+plus the Grey/Yellow actives) that the pack and the client already carry. The
+H5 definitions therefore live at 40001-40024 (= 36730 + H5 id,
+`stats/skills/40000-40099.xml`), the H5 items reference them there, and the
+client SkillName/Skillgrp rows for 40001-40024 are the H5 rows (named after the
+talisman that grants them) while 3271-3294 keep their retail Classic rows (all
+levels). The talisman Armorgrp rows also moved from `body_part=underwear` (an
+Essence leftover) to `deco1`, the talisman slot the server equips them into.
+Skills whose meaning already matched (3295-3299, 3410, 3428-3438, 3487-3497)
+keep the pack's own tuning.
 
 `PledgeShowInfoUpdate` and `PledgeShowMemberListAll` are recreated with the
 fortress slot (after the hideout field) filled from fortress ownership, so the
