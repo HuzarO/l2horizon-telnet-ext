@@ -107,3 +107,9 @@ seventh grade it needs Expertise S80, skill 239 level 6, which the core grants
 at level 80 (`experienceLevel`) and the skill tree lists at 80. Wearing it
 earlier gives the usual grade penalty. Client: `crystal_type=s80` on the
 Dynasty Armorgrp/Weapongrp rows and the Expertise S80 skill rows.
+
+Sealed Dynasty pieces (the recipe products) are unsealed by the Blacksmith of
+Mammon (`multisell/ssq_exchange_for_s.xml`, `ssq_acce_exchange_for_s.xml`,
+High Five Ancient Adena fees). The Test Server Helper (quest 700) sells the
+whole Dynasty range, the 73 talismans and the talisman bracelets (multisells
+999906-999908, 999916-999919, 999927, 999956-999959).
