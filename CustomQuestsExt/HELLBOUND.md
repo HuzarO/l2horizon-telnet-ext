@@ -108,9 +108,19 @@ at level 80 (`experienceLevel`) and the skill tree lists at 80. Wearing it
 earlier gives the usual grade penalty. Client: `crystal_type=s80` on the
 Dynasty Armorgrp/Weapongrp rows and the Expertise S80 skill rows.
 
-Sealed Dynasty pieces (the recipe products) are unsealed by the Blacksmith of
-Mammon (`multisell/ssq_exchange_for_s.xml`, `ssq_acce_exchange_for_s.xml`,
-High Five Ancient Adena fees). The Test Server Helper (quest 700) sells the
+The Blacksmith of Mammon got an "S80-Grade (Dynasty)" page
+(`html-*/seven_signs/mammblack_2c.htm`) with the High Five services: craft
+the Dynasty Dual Sword (`ssq_dual_for_s80`), bestow a special ability
+(`ssq_weapon_variation_s80`, Soul Crystal stage 14 + 285 Gemstone S), release
+the seal of the recipe products (`ssq_exchange_for_s80`,
+`ssq_acce_exchange_for_s80`, Ancient Adena), turn Foundation items into
+Masterwork ones (`ssq_foundation_for_s80`, Mammon's Varnish Enhancer sold by
+the Merchant of Mammon) and exchange Masterwork upper armor
+(`ssq_rare_exchange_for_s80`); the shared "remove special ability" list
+covers the Dynasty SA weapons. Added for it: Soul Crystals stage 14
+(9570-9572, levelled from stage 13 on Typhoon as in H5), Mammon's Varnish
+Enhancer (12374) and the Dynasty Dual Sword as item 40000 (H5 10004 is the
+pack's Crystal Scroll: Enchant Armor (Grade A)). The Test Server Helper (quest 700) sells the
 normal Dynasty weapons, armor, jewelry and sealed pieces, the recipes and
 parts, the 73 talismans and the six talisman bracelets (multisells 999906,
 999916, 999919, 999927, 999956-999958).
