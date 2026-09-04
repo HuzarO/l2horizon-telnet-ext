@@ -439,6 +439,130 @@ public class HellboundManager implements ScriptFile
 		}
 	}
 
+	/** Milestone flags the stage formula uses, by the short names the admin commands accept. */
+	public static final String[] FLAGS = { "judes", "bernard", "derek", "captain" };
+
+	private static String flagVar(String flag)
+	{
+		switch(flag.toLowerCase())
+		{
+			case "judes":
+				return VAR_JUDES_BOXES;
+			case "bernard":
+				return VAR_BERNARD_BOXES;
+			case "derek":
+				return VAR_DEREK_KILLED;
+			case "captain":
+				return VAR_CAPTAIN_KILLED;
+			default:
+				return null;
+		}
+	}
+
+	public static boolean isFlag(String flag)
+	{
+		return flagVar(flag) != null;
+	}
+
+	public static boolean getFlag(String flag)
+	{
+		String var = flagVar(flag);
+		return var != null && ServerVariables.getBool(var, false);
+	}
+
+	public static void setFlag(String flag, boolean value)
+	{
+		String var = flagVar(flag);
+		if(var != null)
+			ServerVariables.set(var, value);
+	}
+
+	/** Lowest trust of a stage (retail thresholds); stages 4/5 and 8/9 also need the milestone flags. */
+	public static long getStageTrust(int stage)
+	{
+		switch(stage)
+		{
+			case 0:
+				return 0;
+			case 1:
+				return 1;
+			case 2:
+				return 300000;
+			case 3:
+				return 600000;
+			case 4:
+			case 5:
+				return 1000000;
+			case 6:
+				return 1200000;
+			case 7:
+				return 1500000;
+			case 8:
+			case 9:
+				return 1800000;
+			case 10:
+				return 2100000;
+			default:
+				return 2200000;
+		}
+	}
+
+	/** The stage the island is currently spawned for. */
+	public int getCurrentStage()
+	{
+		return _initialStage;
+	}
+
+	public int getSpawnedCount()
+	{
+		return _spawnList.size();
+	}
+
+	/**
+	 * Moves the island to a stage: sets the trust to the stage's lowest value
+	 * and the milestone flags the stage needs, then respawns. Capped by
+	 * HellboundMaxLevel; stage 0 closes the island.
+	 */
+	public synchronized void setStage(int stage)
+	{
+		if(stage < 0)
+			stage = 0;
+		if(stage > HellboundConfig.MAX_LEVEL)
+			stage = HellboundConfig.MAX_LEVEL;
+		setConfidence(getStageTrust(stage));
+		setFlag("judes", stage >= 4);
+		setFlag("bernard", stage >= 4);
+		setFlag("derek", stage >= 5);
+		setFlag("captain", stage >= 9);
+		checkStage();
+	}
+
+	/** Closes the island: trust 0, flags cleared, everything despawned. */
+	public synchronized void reset()
+	{
+		setConfidence(0);
+		for(String flag : FLAGS)
+			setFlag(flag, false);
+		respawn();
+	}
+
+	/** Despawns and respawns the current stage (after data edits, or to restore killed NPCs). */
+	public synchronized void respawn()
+	{
+		if(!_initialized)
+			return;
+		despawnHellbound();
+		spawnHellbound();
+		doorHandler();
+		_initialStage = getHellboundLevel();
+	}
+
+	/** Re-applies the door states of the current stage. */
+	public synchronized void applyDoors()
+	{
+		doorHandler();
+	}
+
 	/**
 	 * Re-reads the stage and, when it changed, replaces the island's spawns
 	 * and door states. Runs every HellboundStageCheckMinutes and right after

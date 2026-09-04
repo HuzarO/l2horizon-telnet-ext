@@ -73,7 +73,9 @@ public class _131_BirdInACage extends Quest implements ScriptFile
 		}
 		else if(event.equals("meet") && cond == 2)
 		{
-			st.getPlayer().teleToLocation(153736, 142056, -9744, ReflectionManager.DEFAULT);
+			// H5 sent the player into the Crystal Caverns instance here; on this
+			// server Parme stands in the Sea Dragon cave under the Isle of Prayer
+			st.getPlayer().teleToLocation(149430, 173498, -5016, ReflectionManager.DEFAULT);
 			return null;
 		}
 
