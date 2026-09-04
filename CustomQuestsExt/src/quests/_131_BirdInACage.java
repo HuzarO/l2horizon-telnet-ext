@@ -59,7 +59,7 @@ public class _131_BirdInACage extends Quest implements ScriptFile
 			st.giveItems(PARMES_LETTER, 1, false);
 			st.playSound(SOUND_MIDDLE);
 			// back to Kanis (Heine harbor on this server; the Isle of Prayer is not part of the world)
-			st.getPlayer().teleToLocation(111800 + Rnd.get(-100, 100), 219640 + Rnd.get(-100, 100), -3664, ReflectionManager.DEFAULT);
+			st.getPlayer().teleToLocation(112089 + Rnd.get(-100, 100), 219660 + Rnd.get(-100, 100), -3664, ReflectionManager.DEFAULT);
 		}
 		else if(event.equals("priest_kanis_q0131_17.htm") && cond == 3)
 		{

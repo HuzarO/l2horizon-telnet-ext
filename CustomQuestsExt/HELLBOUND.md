@@ -79,7 +79,7 @@ transformation (set 9669/9670/9671, skill 3359).
 * The stage-10/11 spawn entries (22396-22399, 22403) were removed from the
   spawn list; Jerian (32302) and Dorian (32373) are not spawned.
 * The world has no Isle of Prayer: Galate and the warpgate stand at the Heine
-  harbor as in H5, Kanis was moved next to them (111800 219640 -3664) and
+  harbor as in H5, Kanis was moved across the warpgate from Galate (112089 219660 -3664, same heading) and
   Parme to the entrance of the Garden of Eva (84413 234334 -3680); the quest
   teleports, dialogs and the client quest journal rows point there.
 
