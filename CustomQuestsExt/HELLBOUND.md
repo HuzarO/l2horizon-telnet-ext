@@ -68,9 +68,11 @@ transformation (set 9669/9670/9671, skill 3359).
   combat stats, `male;female` collision values reduced to one, `faction names`
   → `name`, `use_type` dropped from skills. H5 attribute stones (9546-9551) and
   item 13099 are not on this server and were removed from the drop lists. The
-  server caps at level 80 and the pack's augmentation knows the level 46-76
-  life stones only, so the H5 level 80 (9573-9576) and level 82 (10483-10486)
-  life stone drops became the level 76 series (8732/8742/8752/8762).
+  server caps at level 80, so the pack's four level 82 life stones
+  (10483-10486, normal/mid/high/top grade) were renamed "... Life Stone: level
+  80", made usable from level 80 and registered in variation_group and
+  variation_data with the level 76 option tables; every H5 level 80/82 life
+  stone drop points at them, grade for grade.
 * Quest completion checks use the quest class names
   (`player.isQuestCompleted("_130_PathToHellbound")`), quest dialogs are
   dispatched as `bypass -h Quest <name> <file>`.
