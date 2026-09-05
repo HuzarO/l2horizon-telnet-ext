@@ -56,6 +56,12 @@ as enchant routes, hence the coarse grid. The skills multiply
 premium and party rates. They are refreshed at login, on level up, on an admin
 level change and on a subclass switch; `//stagebands` refreshes everybody.
 
+The `.stage` window (and the admin page) lists the resulting rates per level
+run, not the factors: the server rate `RateXp` / `RateSp` of
+`server.properties` times the band factor, so with `RateXp = 3` a band at 1.0
+reads `x3.00` and a band at 0.5 reads `x1.50`. Levels the bands do not cover
+appear with the plain server rate.
+
 ## Multisell versions
 
 For a list `X` (file `X.xml`, numeric or named), `X-3.xml` is served from stage

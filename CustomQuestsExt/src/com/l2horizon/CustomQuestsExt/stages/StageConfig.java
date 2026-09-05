@@ -101,7 +101,7 @@ public class StageConfig
 	}
 
 	/** "1-40:1.0, 41-52:0.5, 53-61:0.25, 62-80:0.1" */
-	private static Band[] parseBands(String value, int stage)
+	static Band[] parseBands(String value, int stage)
 	{
 		List<Band> bands = new ArrayList<Band>();
 		for(String part : value.split("[,;]"))

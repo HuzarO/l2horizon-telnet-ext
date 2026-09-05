@@ -6,6 +6,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -24,6 +25,7 @@ import l2.gameserver.model.GameObjectsStorage;
 import l2.gameserver.model.Player;
 import l2.gameserver.model.Skill;
 import l2.gameserver.model.actor.listener.CharListenerList;
+import l2.gameserver.model.base.Experience;
 import l2.gameserver.network.l2.components.CustomMessage;
 import l2.gameserver.network.l2.s2c.NpcHtmlMessage;
 import l2.gameserver.tables.SkillTable;
@@ -41,6 +43,9 @@ import org.slf4j.LoggerFactory;
  * (ServerVariables "ServerStage"), or, when none is stored, the last stage
  * whose date has passed. Admin changes are stored only and take effect at the
  * next restart, so nothing switches under a running world.
+ *
+ * The band factors multiply the server rates (RateXp / RateSp of
+ * server.properties); players see the resulting rates in the .stage window.
  *
  * At world start the manager
  *  - attaches a {@link StageEquipCondition} to every equipable item above No-grade,
@@ -459,19 +464,66 @@ public class StageManager
 		return sb.toString();
 	}
 
+	/** a run of levels with the same EXP and SP band factors */
+	static final class RateRange
+	{
+		final int min;
+		int max;
+		final double exp;
+		final double sp;
+
+		RateRange(int level, double exp, double sp)
+		{
+			this.min = level;
+			this.max = level;
+			this.exp = exp;
+			this.sp = sp;
+		}
+	}
+
+	/** levels 1..maxLevel grouped into runs of equal EXP/SP factors, in level order */
+	static List<RateRange> rateRanges(StageConfig.Band[] exp, StageConfig.Band[] sp, int maxLevel)
+	{
+		List<RateRange> ranges = new ArrayList<RateRange>();
+		RateRange current = null;
+		for(int level = 1; level <= maxLevel; level++)
+		{
+			double e = StageConfig.factor(exp, level);
+			double s = StageConfig.factor(sp, level);
+			if(current != null && current.exp == e && current.sp == s)
+				current.max = level;
+			else
+			{
+				current = new RateRange(level, e, s);
+				ranges.add(current);
+			}
+		}
+		return ranges;
+	}
+
+	/** the rate a player gets: the server rate (RateXp / RateSp) times the band factor, as "x3.00" */
+	static String rate(double serverRate, double factor)
+	{
+		return String.format(Locale.ENGLISH, "x%.2f", serverRate * factor);
+	}
+
+	static String levels(RateRange range)
+	{
+		return range.min == range.max ? String.valueOf(range.min) : range.min + "-" + range.max;
+	}
+
 	private String bandRows(Player player)
 	{
+		List<RateRange> ranges = rateRanges(StageConfig.EXP_BANDS[_active], StageConfig.SP_BANDS[_active], Experience.getMaxLevel());
+		if(ranges.size() == 1)
+			return "<tr><td>" + new CustomMessage("stages.bands.none", player).addString(rate(Config.RATE_XP, ranges.get(0).exp)).addString(rate(Config.RATE_SP, ranges.get(0).sp)) + "</td></tr>";
 		StringBuilder sb = new StringBuilder();
-		StageConfig.Band[] exp = StageConfig.EXP_BANDS[_active];
-		StageConfig.Band[] sp = StageConfig.SP_BANDS[_active];
-		if(exp == null || exp.length == 0)
-			return "<tr><td>" + text(player, "stages.bands.none") + "</td></tr>";
-		for(StageConfig.Band band : exp)
+		sb.append("<tr><td width=90><font color=\"B09979\">").append(text(player, "stages.levels")).append("</font></td><td width=90><font color=\"B09979\">EXP</font></td><td width=90><font color=\"B09979\">SP</font></td></tr>");
+		for(RateRange range : ranges)
 		{
-			double spFactor = StageConfig.factor(sp, band.min);
-			sb.append("<tr><td width=90>").append(text(player, "stages.levels")).append(' ').append(band.min).append('-').append(band.max).append("</td>");
-			sb.append("<td width=90>EXP x").append(String.format("%.2f", band.factor)).append("</td>");
-			sb.append("<td width=90>SP x").append(String.format("%.2f", spFactor)).append("</td></tr>");
+			sb.append("<tr><td width=90>").append(levels(range)).append("</td>");
+			sb.append("<td width=90>").append(rate(Config.RATE_XP, range.exp)).append("</td>");
+			sb.append("<td width=90>").append(rate(Config.RATE_SP, range.sp)).append("</td></tr>");
 		}
 		return sb.toString();
 	}
