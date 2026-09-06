@@ -155,6 +155,13 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			store.setSetupPending(false);
 	}
 
+	/** buffs the player may list: BuffStoreBaseSlots plus the learned level of Expand Buff Store */
+	public static int slotLimit(Player player)
+	{
+		int level = BuffStoreConfig.EXPAND_SKILL_ID > 0 ? player.getSkillLevel(BuffStoreConfig.EXPAND_SKILL_ID) : 0;
+		return BuffStoreConfig.BASE_SLOTS + Math.max(0, level);
+	}
+
 	private static boolean canSell(Player player, Buff buff)
 	{
 		return player.getKnownSkill(buff.skillId) != null && player.getLevel() >= buff.minLevel;
@@ -253,7 +260,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			fail(player, new CustomMessage("buffstore.invalid", player));
 			return;
 		}
-		int limit = player.getTradeLimit();
+		int limit = slotLimit(player);
 		if(count > limit)
 		{
 			fail(player, new CustomMessage("buffstore.tooMany", player).addNumber(limit));

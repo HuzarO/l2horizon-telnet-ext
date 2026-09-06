@@ -76,6 +76,7 @@ state. Nothing else is needed because every buff store rule keys on the store ty
 | Key | Default | Meaning |
 |---|---|---|
 | `BuffStoreEnabled` | True | master switch; off: `/buff` answers with a message, open stores close at login |
+| `BuffStoreBaseSlots` / `BuffStoreExpandSkillId` | 4 / 90174 | buffs a seller can list = base + learned level of the Expand Buff Store passive |
 | `BuffStoreMinPrice` / `BuffStoreMaxPrice` | 1 / 1000000000 | global price limits per buff |
 | `BuffStoreTaxPercent` | 0 | percentage of every sale removed as tax |
 | `BuffStoreAllowOffline` | True | `.offline` allowed with a buff store open |
@@ -88,9 +89,16 @@ state. Nothing else is needed because every buff store rule keys on the store ty
 | `BuffStoreCheckWeapon` | True | the seller must wield a weapon the skill allows (the core's weapon dependency; dances need dual swords) |
 | `BuffStoreListMp` | Stock | header layout of the buyer's list. `Stock` = the untouched layout; the others need a client that parses 0xA1 that way for buff sellers: `Unknown` = the spare stock field after the adena carries the current MP; `Craft` = seller id, current MP, max MP, adena, count (the RecipeShopSellList header); `Insert` = MP after the seller id, rest stock. With the stock parser `Craft`/`Insert` put the MP into the package-sale flag and the store becomes an all-or-nothing package sale |
 
-The number of buffs a seller can list is the stock private store slot limit the
-client reads from `UserInfo` (`MaxPvtStoreSlotsDwarf` / `MaxPvtStoreSlotsOther` in
-the server config, 4 / 3 by default); raise those to allow longer buff lists.
+The number of buffs a seller can list is `BuffStoreBaseSlots` (4) plus the learned
+level of **Expand Buff Store** (skill 90174, `data/stats/skills/90100-90199.xml`): a
+26-level passive marker skill without effects, sold by the Fishing Guild for Proof
+of Catching a Fish like the other Expand skills (`data/skill_tree/fishing_skill_tree.xml`,
+levels 1-26 from character level 20 to 76, 2,000 to 100,000 PCOF per level,
+1,030,000 in total), so 30 buffs with every level. The server enforces it in Start
+(`buffstore.tooMany`); the client's setup window has to allow the same number
+(the stock window caps at the item-store `privateStoreSellLimit` of `UserInfo`).
+The client rows of the skill are in `tools/client/skill_rows` (icon `icon.skill90174`,
+a description per level naming the bonus and the total).
 
 ## The buff list
 

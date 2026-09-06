@@ -15,6 +15,10 @@ public final class BuffStoreConfig
 	public static final String FILE = "config/custom/buffstore.properties";
 
 	public static boolean ENABLED = true;
+	/** buffs a seller can list without the Expand Buff Store skill */
+	public static int BASE_SLOTS = 4;
+	/** the Expand Buff Store passive: every learned level adds one slot */
+	public static int EXPAND_SKILL_ID = 90174;
 	public static long MIN_PRICE = 1L;
 	public static long MAX_PRICE = 1000000000L;
 	public static double TAX_PERCENT = 0.0;
@@ -69,6 +73,8 @@ public final class BuffStoreConfig
 			ExProperties props = new ExProperties();
 			props.load(file);
 			ENABLED = props.getProperty("BuffStoreEnabled", true);
+			BASE_SLOTS = Math.max(1, props.getProperty("BuffStoreBaseSlots", 4));
+			EXPAND_SKILL_ID = props.getProperty("BuffStoreExpandSkillId", 90174);
 			MIN_PRICE = Math.max(1L, props.getProperty("BuffStoreMinPrice", 1L));
 			MAX_PRICE = Math.max(MIN_PRICE, props.getProperty("BuffStoreMaxPrice", 1000000000L));
 			TAX_PERCENT = Math.min(100.0, Math.max(0.0, props.getProperty("BuffStoreTaxPercent", 0.0)));
