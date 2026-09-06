@@ -27,8 +27,10 @@ import l2.gameserver.model.items.TradeItem;
 import l2.gameserver.network.l2.components.CustomMessage;
 import l2.gameserver.network.l2.components.IStaticPacket;
 import l2.gameserver.network.l2.components.SystemMsg;
+import l2.gameserver.network.l2.s2c.ExPrivateStoreSellingResult;
 import l2.gameserver.network.l2.s2c.ExPrivateStoreSetWholeMsg;
 import l2.gameserver.network.l2.s2c.MagicSkillUse;
+import l2.gameserver.network.l2.s2c.SystemMessage;
 import l2.gameserver.tables.SkillTable;
 import l2.gameserver.utils.Log;
 import l2.gameserver.utils.Strings;
@@ -53,7 +55,8 @@ import org.slf4j.LoggerFactory;
  * <li>Message - {@link #setTitle};</li>
  * <li>a buyer's double-click - {@link #onSellerAction} / {@link #sendList}, then
  * {@link #buy} from the shadowed RequestPrivateStoreBuy: adena moves, the seller
- * casts the buff on the buyer at the seller's learned level, the store stays open.</li>
+ * casts the buff on the buyer at the seller's learned level, both sides get the stock
+ * sale messages and the seller the stock selling result, the store stays open.</li>
  * </ul>
  * Nothing here touches the inventory or the core trade lists. The core resets the
  * store type itself on death, teleport, logout and Olympiad, which is enough since
@@ -464,8 +467,20 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 				seller.broadcastPacket(new MagicSkillUse(seller, buyer, skill.getDisplayId(), level, 0, 0L));
 			}
 			skill.getEffects(seller, buyer, false, false);
-			seller.sendMessage(new CustomMessage("buffstore.sold", seller).addString(buyer.getName()).addString(buff.name).addNumber(entry.price));
-			buyer.sendMessage(new CustomMessage("buffstore.bought", buyer).addString(buff.name).addString(seller.getName()).addNumber(entry.price));
+			// the stock private-store feedback: the sale messages name the dummy item, which the
+			// client shows as the buff name, and the selling result fills the seller's sale log
+			SystemMessage sold = new SystemMessage(SystemMsg.S2_IS_SOLD_TO_C1_FOR_THE_PRICE_OF_S3_ADENA);
+			sold.addString(buyer.getName());
+			sold.addItemName(entry.itemId);
+			sold.addNumber(entry.price);
+			seller.sendPacket(sold);
+			SystemMessage purchased = new SystemMessage(SystemMsg.S2_HAS_BEEN_PURCHASED_FROM_C1_AT_THE_PRICE_OF_S3_ADENA);
+			purchased.addString(seller.getName());
+			purchased.addItemName(entry.itemId);
+			purchased.addNumber(entry.price);
+			buyer.sendPacket(purchased);
+			if(BuffStoreConfig.SELLING_RESULT)
+				seller.sendPacket(new ExPrivateStoreSellingResult(entry.itemId, 1L, buyer.getName()));
 			Log.add(seller.getName() + " sold buff " + buff.name + " (skill " + skill.getId() + " lv " + skill.getLevel() + ") to " + buyer.getName() + " for " + entry.price + " adena", "buffstore");
 		}
 		if(tax > 0L)

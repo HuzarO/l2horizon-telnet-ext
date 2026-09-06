@@ -24,7 +24,7 @@ Server datapack (`l2horizon-server`):
 | `gameserver/config/custom/buffstore.properties` | switches and limits (below) |
 | `gameserver/data/string/strings_en.properties`, `strings_ru.properties` | `buffstore.*` messages |
 | `tools/client/gen_buff_store_rows.py` | regenerates the item templates and the client rows from `buff_store.xml` |
-| `tools/client/item_rows/ItemName_Classic.rows.txt`, `EtcItemgrp_Classic.rows.txt` | the client rows of the dummy items (name = buff name, icon = skill icon, `action_none`), merged with `tools/client/merge_item_rows.py` |
+| `tools/client/item_rows/ItemName_Classic.rows.txt`, `EtcItemgrp_Classic.rows.txt` | the client rows of the dummy items (name = buff name, description = the buff's own description at its highest base level, icon = skill icon, `action_none`), merged with `tools/client/merge_item_rows.py` |
 
 Extension (`CustomQuestsExt`, package `com.l2horizon.CustomQuestsExt.buffstore`):
 
@@ -54,7 +54,7 @@ classes are replaced on the classpath; the item-store behaviour of each is uncha
 | context menu close | `RequestActionUse` (Private Store - Sell) | the core resets the type and sends its item manage list; the store-type listener sees the reset came from `RequestActionUse` and re-sends the buff setup window with the previous entries once the stand-up finished |
 | Message | `SetPrivateStoreMsgSell` (29 chars) | `setTitle`: stored, echoed back as `PrivateStoreMsgSell` for the prefill, broadcast as `ExPrivateStoreSetWholeMsg` while the store is open |
 | buyer double-click | `Action` | targeted seller with type 10: in range -> `PrivateStoreListSell` layout with the entries; out of range -> the core walks the buyer there and the window opens on arrival |
-| Buy | `RequestPrivateStoreBuy` | `buy`: seller still type 10 and within 200, both alive, every objectId a listed entry with count 1 and the listed price, sum with overflow check, adena moved (optional tax), `skill.getEffects(seller, buyer)` per buff at the seller's learned level (or the table's fixed `level`), cast animation, messages to both sides, `log/buffstore` line; the store stays open |
+| Buy | `RequestPrivateStoreBuy` | `buy`: seller still type 10 and within 200, both alive, every objectId a listed entry with count 1 and the listed price, sum with overflow check, adena moved (optional tax), `skill.getEffects(seller, buyer)` per buff at the seller's learned level (or the table's fixed `level`), cast animation, the stock sale messages to both sides (`S2 is sold to C1 for S3 adena` / `S2 has been purchased from C1 at S3 adena`, the item name being the buff name), `ExPrivateStoreSellingResult(dummy id, 1, buyer)` to the seller for the client's sale log, `log/buffstore` line; the store stays open |
 
 Bubble replay: the core re-sends store messages on visibility only for its own store
 types, so a task (`BuffStoreBubbleRefreshSeconds`) sends `ExPrivateStoreSetWholeMsg`
@@ -82,6 +82,7 @@ state. Nothing else is needed because every buff store rule keys on the store ty
 | `BuffStoreRestoreOnLogin` | True | re-open the store at login |
 | `BuffStoreBubbleRefreshSeconds` | 2 | bubble replay interval |
 | `BuffStoreCastAnimation` | True | `MagicSkillUse` on every sold buff |
+| `BuffStoreSellingResult` | True | `ExPrivateStoreSellingResult` to the seller per sold buff (sale log / report); the stock client lowers the entry's count on it, so the buff range should skip that decrement in `PrivateShopWnd` |
 
 The number of buffs a seller can list is the stock private store slot limit the
 client reads from `UserInfo` (`MaxPvtStoreSlotsDwarf` / `MaxPvtStoreSlotsOther` in
@@ -108,5 +109,7 @@ of this server learns.
 
 To add a buff: append a `<buff item="811xx" skill="..." name="..." icon="icon.skillNNNN"/>`
 line to `buff_store.xml` (next free id, 81000-81499), run
-`python3 tools/client/gen_buff_store_rows.py`, merge the client rows with
-`tools/client/merge_item_rows.py` and ship the two client tables.
+`SKILLNAME=<SkillName_Classic.txt> python3 tools/client/gen_buff_store_rows.py`
+(fills the `desc` attribute from the skill table and writes the templates and
+rows), merge the client rows with `tools/client/merge_item_rows.py` and ship the
+two client tables.

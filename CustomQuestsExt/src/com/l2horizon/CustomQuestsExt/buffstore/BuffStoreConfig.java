@@ -22,6 +22,8 @@ public final class BuffStoreConfig
 	public static boolean RESTORE_ON_LOGIN = true;
 	public static int BUBBLE_REFRESH_SECONDS = 2;
 	public static boolean CAST_ANIMATION = true;
+	/** ExPrivateStoreSellingResult to the seller for every sold buff (the client's sale log) */
+	public static boolean SELLING_RESULT = true;
 
 	private BuffStoreConfig()
 	{
@@ -47,6 +49,7 @@ public final class BuffStoreConfig
 			RESTORE_ON_LOGIN = props.getProperty("BuffStoreRestoreOnLogin", true);
 			BUBBLE_REFRESH_SECONDS = Math.max(1, props.getProperty("BuffStoreBubbleRefreshSeconds", 2));
 			CAST_ANIMATION = props.getProperty("BuffStoreCastAnimation", true);
+			SELLING_RESULT = props.getProperty("BuffStoreSellingResult", true);
 		}
 		catch(Exception e)
 		{
