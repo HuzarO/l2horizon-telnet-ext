@@ -146,6 +146,15 @@ Worker 32485 appears at `rewarder_loc`: `ShowResults` shows the grade page, `Sol
 `reward_lvl_<grade>` once (Essence of Kamaloka 2-17 and one Pathfinder Supplies box, the retail
 table of the Mobius script), `ExitSoloKama` sends the player back and closes the instance.
 
+**Essence exchange.** The town Pathfinder Worker's "Exchange Essence of Kamaloka" opens
+multisell 8100 (the High Five list without its three Kamaloka Circlet boxes, which the client does
+not have): 10 / 20 / 50 / 100 / 200 essences for a Pathfinder's Reward D / C / B / A / S-Grade
+box (13003-13007, `data/items/13000-13099.xml`). A box is one roll (`data/capsule_items.xml`), the
+High Five chances without the attribute stones and the Icarus weapons: D 3.2 % Scroll: Enchant
+Weapon (B); C 1.6 % Scroll: Enchant Weapon (A); B 1.1 % Scroll: Enchant Weapon (S); A 2 % Scroll:
+Enchant Weapon (S), 1 % each Sealed Dynasty Helmet / Leather Helmet / Circlet Piece, 0.1 % each of
+the eleven Dynasty weapons; S 3.8 % Scroll: Enchant Weapon (S). The rest of the roll gives nothing.
+
 | key | default | meaning |
 |---|---|---|
 | RimKamalokaEnabled | True | master switch |
@@ -160,6 +169,6 @@ Workers already have their Classic names and meshes.
 
 ## Not ported
 
-The Essence of Kamaloka exchange, the Kanabion report and the leader board of the town
-Pathfinder Worker; the Classic pack's `default/32485*.htm` are unused now (the Pathfinder Workers
+The Kanabion report and the leader board of the town Pathfinder Worker, and the three
+300-essence Kamaloka Circlet boxes of the exchange (no client rows, no known contents); the Classic pack's `default/32485*.htm` are unused now (the Pathfinder Workers
 read `instance/soloKamaloka/`).
