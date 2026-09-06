@@ -1,5 +1,6 @@
 package com.l2horizon.CustomQuestsExt;
 
+import com.l2horizon.CustomQuestsExt.campfire.CampfireConfig;
 import com.l2horizon.CustomQuestsExt.handlers.admin.ClearInventoryAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.admin.HellboundAdminCommand;
@@ -34,6 +35,7 @@ public class CustomQuestsExt implements ScriptFile {
 		AdminCommandHandler.getInstance().registerAdminCommandHandler(new ClearInventoryAdminCommand());
 		VoicedCommandHandler.getInstance().registerVoicedCommandHandler(new StageVoiceCommand());
 		StageManager.getInstance().load();
+		CampfireConfig.load();
 
 		FortressDAO.getInstance().deleteStrayCombatFlags();
 		CharListenerList.addGlobal(new FortressWorldInfoListener());
