@@ -2,6 +2,9 @@ package com.l2horizon.CustomQuestsExt;
 
 import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreConfig;
 import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreManager;
+import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaBypassHandler;
+import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaConfig;
+import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaDeathListener;
 import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreTable;
 import com.l2horizon.CustomQuestsExt.campfire.CampfireConfig;
 import com.l2horizon.CustomQuestsExt.handlers.admin.ClearInventoryAdminCommand;
@@ -18,6 +21,7 @@ import com.l2horizon.CustomQuestsExt.listeners.FortressWorldInfoListener;
 import com.l2horizon.CustomQuestsExt.handlers.user.RollUserCommand;
 
 import l2.gameserver.dao.FortressDAO;
+import l2.gameserver.handler.bypass.BypassHandler;
 import l2.gameserver.handler.admincommands.AdminCommandHandler;
 import l2.gameserver.handler.usercommands.UserCommandHandler;
 import l2.gameserver.handler.voicecommands.VoicedCommandHandler;
@@ -42,11 +46,14 @@ public class CustomQuestsExt implements ScriptFile {
 		BuffStoreConfig.load();
 		BuffStoreTable.getInstance().load();
 		BuffStoreManager.getInstance().init();
+		KamalokaConfig.load();
+		BypassHandler.getInstance().registerBypass(new KamalokaBypassHandler());
 
 		FortressDAO.getInstance().deleteStrayCombatFlags();
 		CharListenerList.addGlobal(new FortressWorldInfoListener());
 		CharListenerList.addGlobal(new HellboundPvpListener());
 		CharListenerList.addGlobal(new HellboundAccessListener());
+		CharListenerList.addGlobal(new KamalokaDeathListener());
 	}
 
 	@Override
