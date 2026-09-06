@@ -77,6 +77,12 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 	private static final String ACTION_USE_PACKET = "l2.gameserver.network.l2.c2s.RequestActionUse";
 	private static final long APPROACH_TIMEOUT = 15000L;
 	private static final long APPROACH_TICK = 300L;
+	/**
+	 * the buff setup window is re-sent this long after the core's RequestActionUse closed the
+	 * store: just enough for the core's own item manage list, sent right after the listener
+	 * returns, to be queued first so the buff window is the one that stays on screen
+	 */
+	private static final long REOPEN_DELAY = 150L;
 
 	private static final BuffStoreManager INSTANCE = new BuffStoreManager();
 
@@ -609,7 +615,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		// type and re-sends the stock item manage list: stock semantics are "close and edit",
 		// so the buff setup window follows with the previous entries
 		if(wasOpen && type == 0 && !store.isClosingByUs() && player.isOnline() && !player.isInOfflineMode() && closedByActionUse())
-			ThreadPoolManager.getInstance().schedule(new ReopenTask(player), 300L);
+			ThreadPoolManager.getInstance().schedule(new ReopenTask(player), REOPEN_DELAY);
 	}
 
 	private static boolean closedByActionUse()
@@ -648,11 +654,15 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 
 	// ------------------------------------------------------------------ tasks
 
-	/** re-sends the setup window after the core closed the store through RequestActionUse */
+	/**
+	 * Re-sends the setup window after the core closed the store through RequestActionUse
+	 * (the Edit button / context menu). The stock flow sends its item manage list while the
+	 * player is still standing up, so the buff window follows at once as well; waiting for
+	 * the stand-up would leave the item window on screen for the whole animation.
+	 */
 	private final class ReopenTask extends RunnableImpl
 	{
 		private final Player _player;
-		private int _attempts;
 
 		ReopenTask(Player player)
 		{
@@ -664,12 +674,6 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		{
 			if(!_player.isOnline() || _player.isInOfflineMode() || _player.isDead() || _player.isTeleporting() || _player.getTradeManager().isInStoreMode())
 				return;
-			// let the stand-up of the closed store finish first
-			if(_player.getSittingTask() && _attempts++ < 20)
-			{
-				ThreadPoolManager.getInstance().schedule(this, APPROACH_TICK);
-				return;
-			}
 			openSetup(_player, true);
 		}
 	}
