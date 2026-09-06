@@ -32,6 +32,7 @@ import l2.gameserver.network.l2.components.SystemMsg;
 import l2.gameserver.network.l2.s2c.ExPrivateStoreSellingResult;
 import l2.gameserver.network.l2.s2c.ExPrivateStoreSetWholeMsg;
 import l2.gameserver.network.l2.s2c.MagicSkillUse;
+import l2.gameserver.network.l2.s2c.StatusUpdate;
 import l2.gameserver.network.l2.s2c.SystemMessage;
 import l2.gameserver.tables.SkillTable;
 import l2.gameserver.templates.item.ItemTemplate;
@@ -380,7 +381,8 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			buyer.sendActionFailed();
 			return;
 		}
-		buyer.sendPacket(new BuffStoreListSell(buyer, seller, sellList(seller, getStore(seller))));
+		// the seller's current MP first, the client shows it in the buff window
+		buyer.sendPacket(seller.makeStatusUpdate(StatusUpdate.CUR_MP, StatusUpdate.MAX_MP), new BuffStoreListSell(buyer, seller, sellList(seller, getStore(seller))));
 	}
 
 	/**
@@ -516,7 +518,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 				seller.broadcastPacket(new MagicSkillUse(seller, buyer, skill.getDisplayId(), level, 0, 0L));
 			}
 			if(BuffStoreConfig.CONSUME_MP)
-				seller.reduceCurrentMp(mpCost(skill), buyer);
+				seller.reduceCurrentMp(mpCost(skill), null); // no attacker: like the private workshop, no attack stance
 			if(BuffStoreConfig.CONSUME_ITEMS)
 			{
 				int[] consumeIds = skill.getItemConsumeId();
@@ -544,6 +546,13 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		}
 		if(tax > 0L)
 			seller.sendMessage(new CustomMessage("buffstore.tax", seller).addNumber(tax));
+		if(BuffStoreConfig.CONSUME_MP)
+		{
+			// the seller's MP after the casts: to the seller like the private workshop does after a
+			// craft (StatusUpdate CUR_MP), and to the buyer, whose window shows the seller's MP
+			seller.sendStatusUpdate(false, false, StatusUpdate.CUR_MP);
+			buyer.sendPacket(seller.makeStatusUpdate(StatusUpdate.CUR_MP, StatusUpdate.MAX_MP));
+		}
 		buyer.sendActionFailed();
 	}
 

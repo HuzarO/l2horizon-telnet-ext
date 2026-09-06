@@ -9,9 +9,9 @@ import l2.gameserver.network.l2.s2c.AbstractItemListPacket;
 /**
  * The stock PrivateStoreListSell (0xA1) layout fed with the seller's buff entries: the
  * buyer's window of a Private Store (Buff). Package sale flag 0, store price 0. The
- * seller's current and maximum MP travel in the header the way BuffStoreListMp says
- * (default: the RecipeShopSellList header, seller id, current MP, maximum MP, adena,
- * count - the private workshop window shows the crafter's MP from the same fields).
+ * header is the stock one unless BuffStoreListMp says where the seller's current and
+ * maximum MP go; any layout other than Stock needs a client that parses 0xA1 that way
+ * for buff sellers (the stock parser reads the second D as the package-sale flag).
  */
 public class BuffStoreListSell extends AbstractItemListPacket
 {

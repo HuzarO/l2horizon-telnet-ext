@@ -32,13 +32,17 @@ public final class BuffStoreConfig
 	public static boolean CONSUME_ITEMS = true;
 	/** the seller must wield a weapon the skill allows (dances: dual swords) */
 	public static boolean CHECK_WEAPON = true;
-	/** where the seller's MP goes in the buyer's list packet, see {@link ListMp} */
-	public static ListMp LIST_MP = ListMp.CRAFT;
+	/** where the seller's MP goes in the buyer's list packet, see {@link ListMp}; STOCK = the untouched layout */
+	public static ListMp LIST_MP = ListMp.STOCK;
 
 	/** layout of the buyer's PrivateStoreListSell (0xA1) header */
 	public enum ListMp
 	{
-		/** D seller, D curMp, D maxMp, Q buyer adena, D count - the RecipeShopSellList header */
+		/**
+		 * D seller, D curMp, D maxMp, Q buyer adena, D count - the RecipeShopSellList header. Only
+		 * for a client that parses 0xA1 this way for buff sellers: the stock parser reads the
+		 * current MP as the package-sale flag and turns the store into an all-or-nothing sale.
+		 */
 		CRAFT,
 		/** D seller, D curMp, D maxMp, D 0, Q buyer adena, D 0, D count - MP inserted after the seller id, rest stock */
 		INSERT,
@@ -77,15 +81,15 @@ public final class BuffStoreConfig
 			MP_MULTIPLIER = Math.max(0.0, props.getProperty("BuffStoreMpMultiplier", 1.0));
 			CONSUME_ITEMS = props.getProperty("BuffStoreConsumeItems", true);
 			CHECK_WEAPON = props.getProperty("BuffStoreCheckWeapon", true);
-			String layout = props.getProperty("BuffStoreListMp", "Craft").trim().toUpperCase();
+			String layout = props.getProperty("BuffStoreListMp", "Stock").trim().toUpperCase();
 			try
 			{
 				LIST_MP = ListMp.valueOf(layout);
 			}
 			catch(IllegalArgumentException e)
 			{
-				_log.warn("BuffStoreConfig: unknown BuffStoreListMp '" + layout + "', using Craft");
-				LIST_MP = ListMp.CRAFT;
+				_log.warn("BuffStoreConfig: unknown BuffStoreListMp '" + layout + "', using Stock");
+				LIST_MP = ListMp.STOCK;
 			}
 		}
 		catch(Exception e)
