@@ -43,6 +43,35 @@ the whole island:
 
 Remove or rename the file to make the island peaceful again.
 
+### Opening stage
+
+`HellboundAccessStage` (default 4, the S-grade stage of
+`config/custom/stages.properties`) is the server stage from which the
+island can be entered. `HellboundAccess.canEnter` is asked by the warpgate
+(`WarpgateInstance`, the only entrance of this server; it shows
+`default/32318-stage.htm` and the `hellbound.stage.locked` message below the
+stage) and by `HellboundAccessListener` at login, which sends a player found
+on the island while it is closed back to the Heine harbor warpgate. `.hellbound`
+adds the same line while the island is closed. GMs always pass; 0 opens the
+island at every stage, and a disabled stage system opens it too.
+
+### PvP points on the island
+
+`HellboundPvpListener` (a global death listener registered by
+`CustomQuestsExt`) makes kills on the island count as PvP without the
+global `PvPCountingInBattleZone` switch, so the Olympiad stadiums and the
+other battle zones keep the core's behaviour. A player killed by another
+player, or by their summon, while either of them stands in `[hellbound_pvp]`
+gives the killer PvP points exactly as an open-field kill: the core's own
+PvP increase (private in `Player`) is invoked reflectively, so the same-IP
+and same-HWID checks, the one-day reward requirement, the kill
+announcement service and the PvP kill bonus service all apply; if a future
+core drops that method, the listener does the visible part itself. Duels,
+Olympiad participants and the core's `pvp_point_increase` block are
+respected, and the listener is inactive while `PvPCountingInBattleZone` is
+on (the core counts then). `HellboundPvpCount = False` in
+`config/custom/hellbound.properties` turns it off.
+
 ## Trust stages
 
 Trust points live in `ServerVariables` (`HellboundConfidence`, `HB_judesBoxes`,

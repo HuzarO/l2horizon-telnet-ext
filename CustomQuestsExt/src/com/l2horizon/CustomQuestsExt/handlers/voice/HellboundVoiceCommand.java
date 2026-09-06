@@ -4,6 +4,7 @@ import l2.gameserver.handler.voicecommands.IVoicedCommandHandler;
 import l2.gameserver.model.Player;
 import l2.gameserver.network.l2.components.CustomMessage;
 
+import com.l2horizon.CustomQuestsExt.hellbound.HellboundAccess;
 import com.l2horizon.CustomQuestsExt.hellbound.HellboundManager;
 
 /**
@@ -27,6 +28,8 @@ public class HellboundVoiceCommand implements IVoicedCommandHandler
 		{
 			activeChar.sendMessage(new CustomMessage("common.Admin.Hellbound.HBLevel", activeChar).addNumber(HellboundManager.getHellboundLevel()));
 			activeChar.sendMessage(new CustomMessage("common.Admin.Hellbound.HBPoints", activeChar).addNumber(HellboundManager.getConfidence()));
+			if(!HellboundAccess.isOpen())
+				HellboundAccess.tellLocked(activeChar);
 			return true;
 		}
 		return false;

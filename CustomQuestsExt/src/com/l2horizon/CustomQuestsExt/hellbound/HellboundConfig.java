@@ -26,6 +26,10 @@ public final class HellboundConfig
 	public static int MAX_LEVEL = 9;
 	/** Interval, in minutes, of the stage re-check task. */
 	public static int STAGE_CHECK_MINUTES = 2;
+	/** Kills on the island give PvP points although it is a battle zone (see HellboundPvpListener). */
+	public static boolean PVP_COUNT = true;
+	/** Server stage from which the island can be entered (0 = always); see HellboundAccess. */
+	public static int ACCESS_STAGE = 4;
 
 	private HellboundConfig()
 	{
@@ -47,6 +51,8 @@ public final class HellboundConfig
 			MIN_LEVEL = props.getProperty("HellboundMinLevel", 0);
 			MAX_LEVEL = props.getProperty("HellboundMaxLevel", 9);
 			STAGE_CHECK_MINUTES = Math.max(1, props.getProperty("HellboundStageCheckMinutes", 2));
+			PVP_COUNT = props.getProperty("HellboundPvpCount", true);
+			ACCESS_STAGE = Math.max(0, props.getProperty("HellboundAccessStage", 4));
 		}
 		catch(Exception e)
 		{

@@ -62,6 +62,11 @@ run, not the factors: the server rate `RateXp` / `RateSp` of
 reads `x3.00` and a band at 0.5 reads `x1.50`. Levels the bands do not cover
 appear with the plain server rate.
 
+## Hellbound
+
+The island opens with the stage of `HellboundAccessStage` in
+`config/custom/hellbound.properties` (default 4); see `HELLBOUND.md`.
+
 ## Multisell versions
 
 For a list `X` (file `X.xml`, numeric or named), `X-3.xml` is served from stage

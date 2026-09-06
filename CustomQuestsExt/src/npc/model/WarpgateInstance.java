@@ -4,6 +4,7 @@ import l2.gameserver.model.Player;
 import l2.gameserver.model.instances.NpcInstance;
 import l2.gameserver.templates.npc.NpcTemplate;
 
+import com.l2horizon.CustomQuestsExt.hellbound.HellboundAccess;
 import com.l2horizon.CustomQuestsExt.hellbound.HellboundManager;
 
 /**
@@ -11,7 +12,8 @@ import com.l2horizon.CustomQuestsExt.hellbound.HellboundManager;
  * Ported from the High Five npc.model.WarpgateInstance: the gate carries a
  * player over once Path to Hellbound (130) or That's Bloody Hot (133) is
  * completed, and the first traveller through it opens the island (trust
- * stage 1).
+ * stage 1). The island is closed below the server stage of
+ * HellboundAccessStage (HellboundAccess); GMs pass.
  */
 public class WarpgateInstance extends NpcInstance
 {
@@ -31,6 +33,12 @@ public class WarpgateInstance extends NpcInstance
 
 		if(command.startsWith("enter_hellbound"))
 		{
+			if(!HellboundAccess.canEnter(player))
+			{
+				HellboundAccess.tellLocked(player);
+				showChatWindow(player, "default/32318-stage.htm");
+				return;
+			}
 			boolean pathDone = player.isQuestCompleted(PATH_TO_HELLBOUND);
 			if(HellboundManager.getHellboundLevel() != 0 && (pathDone || player.isQuestCompleted(THATS_BLOODY_HOT)))
 				player.teleToLocation(-11272, 236464, -3248);
