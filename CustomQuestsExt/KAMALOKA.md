@@ -150,10 +150,12 @@ table of the Mobius script), `ExitSoloKama` sends the player back and closes the
 multisell 8100 (the High Five list without its three Kamaloka Circlet boxes, which the client does
 not have): 10 / 20 / 50 / 100 / 200 essences for a Pathfinder's Reward D / C / B / A / S-Grade
 box (13003-13007, `data/items/13000-13099.xml`). A box is one roll (`data/capsule_items.xml`), the
-High Five chances without the attribute stones and the Icarus weapons: D 3.2 % Scroll: Enchant
-Weapon (B); C 1.6 % Scroll: Enchant Weapon (A); B 1.1 % Scroll: Enchant Weapon (S); A 2 % Scroll:
-Enchant Weapon (S), 1 % each Sealed Dynasty Helmet / Leather Helmet / Circlet Piece, 0.1 % each of
-the eleven Dynasty weapons; S 3.8 % Scroll: Enchant Weapon (S). The rest of the roll gives nothing.
+High Five chances without the attribute stones and the Icarus weapons, and Dynasty weapon pieces
+where High Five gave full weapons: D 3.2 % Scroll: Enchant Weapon (B); C 1.6 % Scroll: Enchant
+Weapon (A); B 1.1 % Scroll: Enchant Weapon (S); A 2 % Scroll: Enchant Weapon (S), 1 % each Sealed
+Dynasty Helmet / Leather Helmet / Circlet Piece, 0.1 % each of the eleven Dynasty weapon pieces;
+S 3.8 % Scroll: Enchant Weapon (S) and 0.3 % each of the eleven Dynasty weapon pieces. The rest of
+the roll gives nothing.
 
 | key | default | meaning |
 |---|---|---|
