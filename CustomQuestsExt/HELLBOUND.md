@@ -181,5 +181,5 @@ Orfen, Zaken, Baium, Antharas, Valakas, Scarlet van Halisha, Sailren, Lilith,
 Anakim) allow stage 14. Horizon Manager Erica hands out the stage 0 crystals
 (Consumables, multisell 999011). The Test Server Helper (quest 700) sells the
 normal Dynasty weapons, armor, jewelry and sealed pieces, the recipes and
-parts, the 73 talismans and the six talisman bracelets (multisells 999906,
+parts, the 61 talismans and the six talisman bracelets (multisells 999906,
 999916, 999919, 999927, 999956-999958).

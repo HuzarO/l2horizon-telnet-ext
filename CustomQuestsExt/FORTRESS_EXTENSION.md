@@ -9,7 +9,7 @@ Blood Oath logistics. The data side lives in the `l2horizon-server` datapack (br
 10031 Control Room Card (moved from H5's 10014, which this client uses for a D-grade
 enchant scroll), 9912 Knight's Epaulette + shirts 9579-9581 (guard drops), 10212
 npc Only (Bow), the 64 H5 talismans this pack lacked (9914-9965 less 9923, 10518/10519,
-10533-10543 - completing the 73-talisman Knight's Epaulette pool) with their 22 missing
+10533-10543 - completing the Knight's Epaulette pool) with their 22 missing
 equip skills, and 10166 Hot Springs CP Potion + skill 2403 (conjured by the Orange
 Talisman) - H5 items this pack was missing.
 
@@ -29,7 +29,7 @@ This extension fills that gap. All recreated logic follows the L2Scripts High Fi
 | `npc.model.residences.fortress.*` (+`peace`/`siege`) | 16 NPC instance classes: steward (functions via the core ResidenceManager), doorman, Suspicious Merchant registration, peace captains, facility vendors (guard captain, logistics officer with Blood Oath rewards and supply boxes), envoy, main machine + power units mini-games, ballista, mercenary captain. |
 | `ai.residences.fortress.siege.*`, `ai.suspiciousmerchant.*` | 8 commander/machine AI classes and the 21 walking Suspicious Merchant route AIs. |
 | `com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand` | `//fortress`, `//fortress <id>`, `//fortress_set_owner <id> <clanName|npc>`. Registered in `CustomQuestsExt.onLoad()`. Needs `PlayerAccess.CanEditNPC` (same as `//residence`). |
-| `com.l2horizon.CustomQuestsExt.handlers.admin.MultisellAdminCommand` | `//multisell <listId>` opens a multisell for the GM without an npc (GMs are exempt from the merchant-range check when buying). Used by the GM Shop's Talismans page (`admin/gmshop/talismans.htm`: buy list 9284 and multisell 999955 with all 73 talismans). Needs `PlayerAccess.UseGMShop`, like `//gmshop`. |
+| `com.l2horizon.CustomQuestsExt.handlers.admin.MultisellAdminCommand` | `//multisell <listId>` opens a multisell for the GM without an npc (GMs are exempt from the merchant-range check when buying). Used by the GM Shop's Talismans page (`admin/gmshop/talismans.htm`: buy list 9284 and multisell 999955 with the 61 talismans of this server). Needs `PlayerAccess.UseGMShop`, like `//gmshop`. |
 
 ## Core class overrides (classpath shadowing)
 
@@ -112,7 +112,7 @@ they are typed plain `Npc`.
 Support Unit Captain services: multisells 45300001/356482/356483/356484 are
 installed filtered to items this pack carries; `services.ObtainTalisman` (10
 Knight's Epaulettes for a random talisman) is ported with the pool filtered
-against ItemHolder at server start (all 73 H5 talismans exist since the
+against ItemHolder at server start (the 61 H5 talismans exist since the
 datapack import; anything added later joins automatically); the retail
 squad-skill option answers with an "unavailable" dialog because this core
 has no SUB_UNIT skill acquire path.
@@ -216,3 +216,14 @@ Compile `src` against `server.jar`/`scripts.jar` (Java 17), jar `bin` as
 `CustomQuestsExt.ext.jar`. `quests/_350_EnhanceYourWeapon` and `AutoLootExtension`
 are kept out of the shipped jar, matching the deployed one (quest 350 already lives
 in `scripts.jar`; AutoLootExtension force-toggles players' auto-loot).
+
+## Removed talismans
+
+The Grey (9950, 9951), Orange (9952-9954) and Black (9922, 9955-9959)
+talismans and Blue Talisman - Self-Destruction (10423) are deleted from the
+pack together with their skills (3314, 3315, 3332-3334, 3436, 40016-40022):
+no item templates, no shop or helper list entries, and the Knight's
+Epaulette pool of `services.ObtainTalisman` skips them because it only
+lists ids that have a template. 61 talismans remain. Characters that still
+hold one of the removed items lose it at their next load (the core drops
+items without a template and logs a warning).
