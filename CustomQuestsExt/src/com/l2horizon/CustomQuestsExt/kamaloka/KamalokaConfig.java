@@ -31,6 +31,12 @@ public final class KamalokaConfig
 	public static boolean TELEPORT_DEVICE = true;
 	public static int TELEPORT_DEVICE_NPC_ID = 4314;
 	public static int KAMA26_MINION_RESPAWN_SECONDS = 60;
+	public static boolean RIM_ENABLED = true;
+	public static int RIM_DURATION_MINUTES = 20;
+	public static int RIM_EXIT_MINUTES = 10;
+	public static int RIM_LOCK_MINUTES = 10;
+	public static int RIM_MUTANT_DESPAWN_SECONDS = 10;
+	public static boolean RIM_REWARDS = true;
 
 	private KamalokaConfig()
 	{
@@ -61,12 +67,18 @@ public final class KamalokaConfig
 			TELEPORT_DEVICE = props.getProperty("KamalokaTeleportDevice", true);
 			TELEPORT_DEVICE_NPC_ID = props.getProperty("KamalokaTeleportDeviceNpcId", 4314);
 			KAMA26_MINION_RESPAWN_SECONDS = props.getProperty("KamalokaKama26MinionRespawnSeconds", 60);
+			RIM_ENABLED = props.getProperty("RimKamalokaEnabled", true);
+			RIM_DURATION_MINUTES = Math.max(1, props.getProperty("RimKamalokaDurationMinutes", 20));
+			RIM_EXIT_MINUTES = Math.max(1, props.getProperty("RimKamalokaExitMinutes", 10));
+			RIM_LOCK_MINUTES = Math.max(0, props.getProperty("RimKamalokaLockMinutes", 10));
+			RIM_MUTANT_DESPAWN_SECONDS = Math.max(1, props.getProperty("RimKamalokaMutantDespawnSeconds", 10));
+			RIM_REWARDS = props.getProperty("RimKamalokaRewards", true);
 		}
 		catch(Exception e)
 		{
 			_log.error("KamalokaConfig: failed to load " + FILE, e);
 		}
-		_log.info("KamalokaConfig: enabled=" + ENABLED + ", room1 respawn " + ROOM1_RESPAWN_SECONDS + "s, essence reward " + ESSENCE_REWARD + " (" + ESSENCE_COUNTS.size() + " instances), boss MP regen " + BOSS_MP_REGEN + ", teleport device " + TELEPORT_DEVICE);
+		_log.info("KamalokaConfig: enabled=" + ENABLED + ", room1 respawn " + ROOM1_RESPAWN_SECONDS + "s, essence reward " + ESSENCE_REWARD + " (" + ESSENCE_COUNTS.size() + " instances), boss MP regen " + BOSS_MP_REGEN + ", teleport device " + TELEPORT_DEVICE + ", rim " + RIM_ENABLED + " (" + RIM_DURATION_MINUTES + " min, lock " + RIM_LOCK_MINUTES + " min)");
 	}
 
 	private static void parseCounts(String value)

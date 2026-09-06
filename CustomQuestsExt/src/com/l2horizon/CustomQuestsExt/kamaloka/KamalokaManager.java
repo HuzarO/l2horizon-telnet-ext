@@ -92,6 +92,35 @@ public final class KamalokaManager
 			ReflectionUtils.enterReflection(player, new KamalokaReflection(), instanceId);
 	}
 
+	public static final int RIM_FIRST = 46, RIM_LAST = 56;
+
+	public static boolean isRimKamaloka(int instanceId)
+	{
+		return instanceId >= RIM_FIRST && instanceId <= RIM_LAST;
+	}
+
+	/** "solo_kamaloka N" of the Pathfinder Worker: enter a Rim Kamaloka alone, or go back into a running one. */
+	public static void enterRim(Player player, NpcInstance npc, int instanceId)
+	{
+		if(player == null)
+			return;
+		if(!KamalokaConfig.RIM_ENABLED)
+		{
+			player.sendMessage(new CustomMessage("kamaloka.disabled", player));
+			return;
+		}
+		if(!isRimKamaloka(instanceId))
+			return;
+		Reflection r = player.getActiveReflection();
+		if(r != null)
+		{
+			if(player.canReenterInstance(instanceId))
+				player.teleToLocation(r.getTeleportLoc(), r);
+		}
+		else if(player.canEnterInstance(instanceId))
+			ReflectionUtils.enterReflection(player, new RimKamalokaReflection(), instanceId);
+	}
+
 	/** Escape Device: the party leader closes the instance, everybody is sent back. */
 	public static void escape(Player player, NpcInstance npc)
 	{

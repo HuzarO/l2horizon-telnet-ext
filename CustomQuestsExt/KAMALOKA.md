@@ -17,7 +17,7 @@ L2J Mobius High Five `Kamaloka` script, which is the same retail data.
 | strings | `Kama26Boss.helpme`, `kamaloka.disabled`, `kamaloka.wrongCaptain` in `data/string/strings_*.properties` |
 | reward item | `data/items/13000-13099.xml`: 13002 Essence of Kamaloka |
 | config | `config/custom/kamaloka.properties` |
-| geodata | tiles 17_11, 18_11 (Halls), 19_12, 20_12 (Labyrinths), see `tools/geodata/README.md` |
+| geodata | tiles 17_11, 18_11 (Halls), 19_12, 20_12 (Labyrinths), 20_11, 21_11 (Rim), see `tools/geodata/README.md` |
 | admin | Teleport Menu -> Kamaloka (`admin/teleports/kamaloka.htm`): every entry, room and boss spot |
 | extension | `com.l2horizon.CustomQuestsExt.kamaloka.*`, `npc.model.KamalokaGuardInstance`, `LostCaptainInstance`, `KamalokaBossInstance`, `Kama26BossInstance` |
 
@@ -109,8 +109,57 @@ Kamaloka needs its ItemName / EtcItemgrp rows (`tools/client/item_rows`, `merge_
 The maps of tiles 17_11, 18_11, 20_12 (Vanguard) and 19_12 (High Five) have to be present in the
 client; the server geodata matches them.
 
+## Rim Kamaloka (solo instances 46-56)
+
+The eleven solo Rim Kamalokas (levels 25, 30, ... 75, entry within 5 levels, one a day for all of
+them, reuse group 3 reset at 6:30). Data follows the Mobius High Five `RimKamaloka` script, the
+NPC classes the L2Scripts `PathfinderInstance` / `KamalokaNightmare`.
+
+| piece | place |
+|---|---|
+| instances | `data/instances/[046]..[056] Rim Kamaloka.xml`: solo (`party min=1 max=1`), `timelimit` 30 = 20 minutes of fighting + 10 to collect the reward, Kanabion spawns with `respawn="30"`, add_parameters `kanabion` / `doppler` / `voider`, `rewarder_loc`, `reward_lvl_1..5` |
+| Kanabions | 33 templates 22452-22484 in `data/npc/22400-22499.xml` (three per level: Kanabion, Doppler, Void), ai `Kanabion` (`ai.Kanabion` of the extension) |
+| Pathfinder Workers | 32484 (towns, `data/spawn/rim_kamaloka.xml`: Gludio, Dion, Heine, Oren, Rune, Schuttgart at the High Five spots) and 32485 (appears in the instance when the time is up), both typed `Pathfinder` (`npc.model.PathfinderInstance`), dialogs under `html-en/instance/soloKamaloka/` (`32484.htm`, `32484-<town>.htm`, `32485-F..S.htm`, ...) and `html-ru` |
+| rewards | 40 Pathfinder Supplies boxes 10836-10864 and 12824-12834 (`data/items/10800-10899.xml`, `12800-12899.xml`) with their retail contents in `data/capsule_items.xml` (every item of a box is given), plus Essence of Kamaloka |
+| geodata | tiles 20_11 (levels 25-65) and 21_11 (70, 75) from the Vanguard geodata |
+| admin | Teleport Menu -> Kamaloka, section "Rim Kamaloka" |
+
+**Entry.** The town Pathfinder Worker offers the instances of his castle domain (Gludio 46;
+Dion 46-48; Heine 48-50; Oren 49-52; Schuttgart 51-54; Rune 53-56, the Mobius menus): "Challenge
+Rim Kamaloka" (`ListPossible`, the domain comes from `MapRegionManager`, the nearest of the six
+posts is the fallback) then `solo_kamaloka <id>`. The core checks solo, level and the daily reuse
+(`Player.canEnterInstance`); the reflection is `RimKamalokaReflection`.
+
+**Fight.** Kanabions respawn every 30 seconds at their four (six for levels 70 and 75) points.
+Stronger Kanabions come out of them (`RimKamalokaReflection`, fed by the `Kanabion` ai): a hit that
+takes more than 40 % of the HP of an unhurt Kanabion has 5 % to bring out a Doppler (a Doppler:
+5 % Doppler, 5 % Void; a Void: 5 % Void); a kill brings one out with 15 % (Kanabion -> Doppler),
+10 % + 10 % (Doppler -> Doppler / Void) or 20 % (Void -> Void), doubled or more on an overhit kill
+(30 % + 10 %, 30 % + 30 %, 50 %). The newcomer appears on the corpse and attacks at once; one
+that nobody attacked for `RimKamalokaMutantDespawnSeconds` fades away. After
+`RimKamalokaLockMinutes` the daily reuse is set (a player who already left keeps the day free and
+the empty instance closes).
+
+**Result.** After `RimKamalokaDurationMinutes` every monster is removed, the grade is computed (F
+below 10 Kanabions, else (Dopplers + 2 x Voids) / Kanabions + 1, capped at S) and the Pathfinder
+Worker 32485 appears at `rewarder_loc`: `ShowResults` shows the grade page, `SoloKamaReward` gives
+`reward_lvl_<grade>` once (Essence of Kamaloka 2-17 and one Pathfinder Supplies box, the retail
+table of the Mobius script), `ExitSoloKama` sends the player back and closes the instance.
+
+| key | default | meaning |
+|---|---|---|
+| RimKamalokaEnabled | True | master switch |
+| RimKamalokaDurationMinutes | 20 | fighting time |
+| RimKamalokaExitMinutes | 10 | time to collect the reward after that |
+| RimKamalokaLockMinutes | 10 | when the daily reuse is set (0: never) |
+| RimKamalokaMutantDespawnSeconds | 10 | idle Dopplers / Voids vanish |
+| RimKamalokaRewards | True | give the grade reward |
+
+The client needs the 40 supplies rows (`tools/client/item_rows`); the Kanabions and Pathfinder
+Workers already have their Classic names and meshes.
+
 ## Not ported
 
-Rim Kamaloka (the solo instances 46-56 of the Pathfinder Workers 32484 / 32485 / 32713) and the
-Essence of Kamaloka exchange of the Pathfinder Worker; the Classic pack's `default/32485*.htm`
-still carry their unimplemented bypasses.
+The Essence of Kamaloka exchange, the Kanabion report and the leader board of the town
+Pathfinder Worker; the Classic pack's `default/32485*.htm` are unused now (the Pathfinder Workers
+read `instance/soloKamaloka/`).
