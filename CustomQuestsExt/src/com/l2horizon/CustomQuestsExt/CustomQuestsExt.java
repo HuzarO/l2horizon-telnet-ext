@@ -1,5 +1,8 @@
 package com.l2horizon.CustomQuestsExt;
 
+import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreConfig;
+import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreManager;
+import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreTable;
 import com.l2horizon.CustomQuestsExt.campfire.CampfireConfig;
 import com.l2horizon.CustomQuestsExt.handlers.admin.ClearInventoryAdminCommand;
 import com.l2horizon.CustomQuestsExt.handlers.admin.FortressAdminCommand;
@@ -36,6 +39,9 @@ public class CustomQuestsExt implements ScriptFile {
 		VoicedCommandHandler.getInstance().registerVoicedCommandHandler(new StageVoiceCommand());
 		StageManager.getInstance().load();
 		CampfireConfig.load();
+		BuffStoreConfig.load();
+		BuffStoreTable.getInstance().load();
+		BuffStoreManager.getInstance().init();
 
 		FortressDAO.getInstance().deleteStrayCombatFlags();
 		CharListenerList.addGlobal(new FortressWorldInfoListener());
