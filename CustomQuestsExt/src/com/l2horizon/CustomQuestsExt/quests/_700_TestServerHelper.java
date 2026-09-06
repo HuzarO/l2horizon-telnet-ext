@@ -60,6 +60,18 @@ public class _700_TestServerHelper extends Quest implements ScriptFile {
 			st.giveItems(5575, 10000000, true);
 
 			event = "test_server_helper-01.htm";
+		} else if (event.equalsIgnoreCase("give_campfires")) {
+			st.giveItems(40100, 10, true);   // Campfire (CAMPFIRE.md)
+
+			event = "test_server_helper-01.htm";
+		} else if (event.equalsIgnoreCase("give_mana_drugs")) {
+			st.giveItems(726, 100, true);    // Mana Drug
+
+			event = "test_server_helper-01.htm";
+		} else if (event.equalsIgnoreCase("give_mana_potions")) {
+			st.giveItems(728, 100, true);    // Mana Potion
+
+			event = "test_server_helper-01.htm";
 		} else if (event.equalsIgnoreCase("set_level")) {
 			event = "test_server_helper-02.htm";
 		} else if (event.startsWith("do_set_level")) {
