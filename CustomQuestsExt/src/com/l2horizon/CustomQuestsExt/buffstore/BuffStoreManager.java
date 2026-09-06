@@ -13,6 +13,7 @@ import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreTable.Buff;
 
 import l2.commons.math.SafeMath;
 import l2.commons.threading.RunnableImpl;
+import l2.gameserver.Config;
 import l2.gameserver.ThreadPoolManager;
 import l2.gameserver.ai.CtrlIntention;
 import l2.gameserver.data.xml.holder.ItemHolder;
@@ -24,6 +25,7 @@ import l2.gameserver.model.GameObjectsStorage;
 import l2.gameserver.model.Player;
 import l2.gameserver.model.Skill;
 import l2.gameserver.model.World;
+import l2.gameserver.model.Zone;
 import l2.gameserver.model.actor.listener.CharListenerList;
 import l2.gameserver.model.items.TradeItem;
 import l2.gameserver.network.l2.components.CustomMessage;
@@ -168,6 +170,107 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		return BuffStoreConfig.BASE_SLOTS + Math.max(0, level);
 	}
 
+	/**
+	 * The stock private store preconditions (TradeHelper.checksIfCanOpenStore of the committed
+	 * server.jar, same checks and messages in the same order) with the buff store zone rules:
+	 * zones that block private stores also block buff stores (BuffStoreNoStoreZones) and,
+	 * optionally, a buff store opens only inside a buff_store zone (BuffStoreOnlyInBuffZones).
+	 */
+	public static boolean canOpenStore(Player player)
+	{
+		if(!player.getPlayerAccess().UseTrade)
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.SOME_LINEAGE_II_FEATURES_HAVE_BEEN_LIMITED_FOR_FREE_TRIALS_____);
+			return false;
+		}
+		if(player.getLevel() < Config.SERVICES_TRADE_MIN_LEVEL)
+		{
+			player.sendMessage(new CustomMessage("trade.NotHavePermission", player).addNumber(Config.SERVICES_TRADE_MIN_LEVEL));
+			return false;
+		}
+		if(player.isTradeBannedByGM() || player.isSelfRestricted())
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.YOU_ARE_CURRENTLY_BLOCKED_FROM_USING_THE_PRIVATE_STORE_AND_PRIVATE_WORKSHOP);
+			return false;
+		}
+		if(player.getTradeManager().getPrivateStoreType() != 0 && player.getTradeManager().getPrivateStoreType() != STORE_TYPE)
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.YOU_CANNOT_CANCEL_BECAUSE_THE_PRIVATE_SHOP_OR_WORKSHOP_IS_IN_PROGRESS);
+			return false;
+		}
+		if(!zoneAllowsStore(player))
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.YOU_CANNOT_OPEN_A_PRIVATE_STORE_HERE);
+			return false;
+		}
+		if(BuffStoreConfig.ONLY_IN_BUFF_ZONES && !player.isInZone(Zone.ZoneType.buff_store))
+		{
+			player.sendMessage(new CustomMessage("buffstore.zoneOnly", player));
+			return false;
+		}
+		if(player.isCastingNow())
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.A_PRIVATE_STORE_MAY_NOT_BE_OPENED_WHILE_USING_A_SKILL);
+			return false;
+		}
+		if(player.getTransformation() != 0)
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.THE_ATTEMPT_TO_TRADE_HAS_FAILED);
+			return false;
+		}
+		if(player.isInCombat())
+		{
+			player.sendPacket((IStaticPacket) SystemMsg.WHILE_YOU_ARE_ENGAGED_IN_COMBAT_YOU_CANNOT_OPERATE_A_PRIVATE_STORE_OR_PRIVATE_WORKSHOP);
+			return false;
+		}
+		if(player.isMoving() && !Config.ALLOW_TRADE_ON_THE_MOVE)
+		{
+			player.sendMessage(new CustomMessage("trade.YouCanOpenStoreOnMove", player));
+			return false;
+		}
+		if(player.isActionsDisabled() || player.isMounted() || player.isOlyParticipant() || player.isInDuel() || player.isProcessingRequest())
+			return false;
+		if(Config.SERVICES_TRADE_ONLY_FAR)
+		{
+			boolean near = false;
+			for(Player other : World.getAroundPlayers(player, Config.SERVICES_TRADE_RADIUS, 200))
+				if(other.getTradeManager().isInStoreMode())
+				{
+					near = true;
+					break;
+				}
+			if(!World.getAroundNpc(player, Config.SERVICES_TRADE_RADIUS + 100, 200).isEmpty())
+				near = true;
+			if(near)
+			{
+				player.sendMessage(new CustomMessage("trade.OtherTradersNear", player));
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * the zone rule of the stock stores (blocked action open_private_store, honoured for online
+	 * sellers unless NoTradeOnlyOffline restricts it to offline traders), extended to the
+	 * open_private_sell and open_buff_store blocks a zone can declare
+	 */
+	private static boolean zoneAllowsStore(Player player)
+	{
+		if(!BuffStoreConfig.NO_STORE_ZONES)
+			return true;
+		boolean blocked = player.isActionBlocked(Zone.BLOCKED_ACTION_PRIVATE_STORE) || player.isActionBlocked(Zone.BLOCKED_ACTION_PRIVATE_SELL) || player.isActionBlocked(Zone.BLOCKED_ACTION_BUFF_STORE);
+		if(!blocked)
+			return true;
+		return Config.SERVICES_NO_TRADE_ONLY_OFFLINE && !player.isInOfflineMode();
+	}
+
+	/** the zone rules alone, for a store that is already open (login restore) */
+	public static boolean zoneAllowsOpenStore(Player player)
+	{
+		return zoneAllowsStore(player) && (!BuffStoreConfig.ONLY_IN_BUFF_ZONES || player.isInZone(Zone.ZoneType.buff_store));
+	}
+
 	private static boolean canSell(Player player, Buff buff)
 	{
 		return player.getKnownSkill(buff.skillId) != null && player.getLevel() >= buff.minLevel;
@@ -220,7 +323,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		BuffStore store = getStore(player);
 		if(player.getTradeManager().isInStoreMode())
 			close(player, store);
-		else if(!TradeHelper.checksIfCanOpenStore(player, STORE_TYPE))
+		else if(!canOpenStore(player))
 		{
 			player.sendActionFailed();
 			return;
@@ -298,7 +401,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			}
 			list.add(new Entry(itemId, buff.skillId, price));
 		}
-		if(!TradeHelper.checksIfCanOpenStore(player, STORE_TYPE))
+		if(!canOpenStore(player))
 		{
 			player.sendActionFailed();
 			return;
@@ -516,7 +619,10 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			buyer.sendActionFailed();
 			return;
 		}
-		long tax = BuffStoreConfig.TAX_PERCENT > 0.0 ? (long) (total * BuffStoreConfig.TAX_PERCENT / 100.0) : 0L;
+		long tax = BuffStoreConfig.TRADE_TAX ? TradeHelper.getTax(seller, total) : 0L; // TradeTax, OffshoreTradeTax, TradeTaxOnlyOffline, GiranHarborNoTax
+		if(BuffStoreConfig.TAX_PERCENT > 0.0)
+			tax += (long) (total * BuffStoreConfig.TAX_PERCENT / 100.0);
+		tax = Math.min(tax, total);
 		long income = total - tax;
 		if(income > 0L)
 			seller.addAdena(income, true);
@@ -636,7 +742,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		if(!isBuffStore(player))
 			return;
 		BuffStore store = getStore(player);
-		if(!BuffStoreConfig.ENABLED || !BuffStoreConfig.RESTORE_ON_LOGIN || sellList(player, store).isEmpty())
+		if(!BuffStoreConfig.ENABLED || !BuffStoreConfig.RESTORE_ON_LOGIN || sellList(player, store).isEmpty() || !zoneAllowsOpenStore(player))
 		{
 			close(player, store);
 			return;

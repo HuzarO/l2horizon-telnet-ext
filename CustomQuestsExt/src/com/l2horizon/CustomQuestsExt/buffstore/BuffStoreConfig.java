@@ -23,6 +23,14 @@ public final class BuffStoreConfig
 	public static long MAX_PRICE = 1000000000L;
 	public static double TAX_PERCENT = 0.0;
 	public static boolean ALLOW_OFFLINE = true;
+	/** zones that block private stores (open_private_store, open_private_sell, open_buff_store) block buff stores */
+	public static boolean NO_STORE_ZONES = true;
+	/** a buff store can be opened only inside a zone of type buff_store */
+	public static boolean ONLY_IN_BUFF_ZONES = false;
+	/** .offline with a buff store only inside a zone of type buff_store */
+	public static boolean OFFLINE_ONLY_IN_BUFF_ZONES = false;
+	/** the server's private store tax rules (TradeTax, OffshoreTradeTax, ...) apply to buff sales */
+	public static boolean TRADE_TAX = true;
 	public static boolean RESTORE_ON_LOGIN = true;
 	public static int BUBBLE_REFRESH_SECONDS = 2;
 	public static boolean CAST_ANIMATION = true;
@@ -79,6 +87,10 @@ public final class BuffStoreConfig
 			MAX_PRICE = Math.max(MIN_PRICE, props.getProperty("BuffStoreMaxPrice", 1000000000L));
 			TAX_PERCENT = Math.min(100.0, Math.max(0.0, props.getProperty("BuffStoreTaxPercent", 0.0)));
 			ALLOW_OFFLINE = props.getProperty("BuffStoreAllowOffline", true);
+			NO_STORE_ZONES = props.getProperty("BuffStoreNoStoreZones", true);
+			ONLY_IN_BUFF_ZONES = props.getProperty("BuffStoreOnlyInBuffZones", false);
+			OFFLINE_ONLY_IN_BUFF_ZONES = props.getProperty("BuffStoreOfflineOnlyInBuffZones", false);
+			TRADE_TAX = props.getProperty("BuffStoreTradeTax", true);
 			RESTORE_ON_LOGIN = props.getProperty("BuffStoreRestoreOnLogin", true);
 			BUBBLE_REFRESH_SECONDS = Math.max(1, props.getProperty("BuffStoreBubbleRefreshSeconds", 2));
 			CAST_ANIMATION = props.getProperty("BuffStoreCastAnimation", true);

@@ -48,7 +48,7 @@ classes are replaced on the classpath; the item-store behaviour of each is uncha
 
 | Step | Client packet | Server |
 |---|---|---|
-| `/buff` | `RequestUserCommand(171)` | `openSetup`: closes any open store (like the stock "Private Store - Sell" action), runs the stock `TradeHelper.checksIfCanOpenStore` checks, sends the manage list: section A = learned buffs of the table, section B = the saved entries with prices |
+| `/buff` | `RequestUserCommand(171)` | `openSetup`: closes any open store (like the stock "Private Store - Sell" action), runs the stock private store preconditions (`canOpenStore`, the checks of `TradeHelper.checksIfCanOpenStore` with the zone options), sends the manage list: section A = learned buffs of the table, section B = the saved entries with prices |
 | Start | `SetPrivateStoreListSell` with dummy ids | `start`: every id must be a table entry the player has learned, count 1, price within the limits, no duplicates, at most `privateStoreSellLimit` entries; then the entries are persisted, the store type becomes 10 (the core sits the player, stores `storemode=10`, broadcasts CharInfo) and `ExPrivateStoreSetWholeMsg` carries the bubble text to everyone including the seller |
 | Stop / ESC / X | `RequestPrivateStoreQuitSell` | `quit`: closes a buff store (the core stands the player up); silent when nothing is open |
 | context menu close | `RequestActionUse` (Private Store - Sell) | the core resets the type and sends its item manage list; the store-type listener sees the reset came from `RequestActionUse` and re-sends the buff setup window with the previous entries 150 ms later, so the buff window replaces the item window at once (a client whose Edit button sends `/buff`, user command 171, skips the item window entirely) |
@@ -78,7 +78,10 @@ state. Nothing else is needed because every buff store rule keys on the store ty
 | `BuffStoreEnabled` | True | master switch; off: `/buff` answers with a message, open stores close at login |
 | `BuffStoreBaseSlots` / `BuffStoreExpandSkillId` | 4 / 90174 | buffs a seller can list = base + learned level of the Expand Buff Store passive |
 | `BuffStoreMinPrice` / `BuffStoreMaxPrice` | 1 / 1000000000 | global price limits per buff |
-| `BuffStoreTaxPercent` | 0 | percentage of every sale removed as tax |
+| `BuffStoreTradeTax` / `BuffStoreTaxPercent` | True / 0 | the server's private store tax rules (`TradeTax`, `OffshoreTradeTax`, `TradeTaxOnlyOffline`, `GiranHarborNoTax`) apply to buff sales; plus an extra percentage |
+| `BuffStoreNoStoreZones` | True | zones that forbid private stores (blocked action `open_private_store`, plus `open_private_sell` and `open_buff_store`) forbid buff stores; `NoTradeOnlyOffline` narrows it to offline sellers like for item stores; a store restored at login inside such a zone is closed |
+| `BuffStoreOnlyInBuffZones` | False | a buff store opens only inside a `buff_store` zone (`[giran_buff_store]` in `data/zone/offshore.xml`, disabled by default) |
+| `BuffStoreOfflineOnlyInBuffZones` | False | `.offline` with a buff store only inside a `buff_store` zone |
 | `BuffStoreAllowOffline` | True | `.offline` allowed with a buff store open |
 | `BuffStoreRestoreOnLogin` | True | re-open the store at login |
 | `BuffStoreBubbleRefreshSeconds` | 2 | bubble replay interval |

@@ -3,12 +3,14 @@ package com.l2horizon.CustomQuestsExt.buffstore;
 import l2.gameserver.handler.voicecommands.IVoicedCommandHandler;
 import l2.gameserver.handler.voicecommands.VoicedCommandHandler;
 import l2.gameserver.model.Player;
+import l2.gameserver.model.Zone;
 import l2.gameserver.network.l2.components.CustomMessage;
 
 /**
  * Wraps the core's .offline voice command: a Private Store (Buff) may go offline
- * only when BuffStoreAllowOffline is on. Everything else is delegated to the core
- * handler untouched.
+ * only when BuffStoreAllowOffline is on and, with BuffStoreOfflineOnlyInBuffZones,
+ * only inside a buff_store zone. Everything else (no-trade zones, level, price...)
+ * is the core handler, delegated untouched.
  */
 public final class BuffStoreOfflineCommand implements IVoicedCommandHandler
 {
@@ -32,10 +34,18 @@ public final class BuffStoreOfflineCommand implements IVoicedCommandHandler
 	@Override
 	public boolean useVoicedCommand(String command, Player player, String args)
 	{
-		if(player != null && BuffStoreManager.isBuffStore(player) && !BuffStoreConfig.ALLOW_OFFLINE)
+		if(player != null && BuffStoreManager.isBuffStore(player))
 		{
-			player.sendMessage(new CustomMessage("buffstore.noOffline", player));
-			return false;
+			if(!BuffStoreConfig.ALLOW_OFFLINE)
+			{
+				player.sendMessage(new CustomMessage("buffstore.noOffline", player));
+				return false;
+			}
+			if(BuffStoreConfig.OFFLINE_ONLY_IN_BUFF_ZONES && !player.isInZone(Zone.ZoneType.buff_store))
+			{
+				player.sendMessage(new CustomMessage("buffstore.offlineZoneOnly", player));
+				return false;
+			}
 		}
 		return _delegate.useVoicedCommand(command, player, args);
 	}
