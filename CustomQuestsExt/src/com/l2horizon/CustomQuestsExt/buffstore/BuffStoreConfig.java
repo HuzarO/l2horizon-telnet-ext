@@ -28,6 +28,10 @@ public final class BuffStoreConfig
 	public static boolean CONSUME_MP = true;
 	/** multiplier on the skill's MP cost */
 	public static double MP_MULTIPLIER = 1.0;
+	/** the seller needs and spends the skill's consumables (Spirit Ore, ...) for every sold buff */
+	public static boolean CONSUME_ITEMS = true;
+	/** the seller must wield a weapon the skill allows (dances: dual swords) */
+	public static boolean CHECK_WEAPON = true;
 	/** where the seller's MP goes in the buyer's list packet, see {@link ListMp} */
 	public static ListMp LIST_MP = ListMp.CRAFT;
 
@@ -71,6 +75,8 @@ public final class BuffStoreConfig
 			SELLING_RESULT = props.getProperty("BuffStoreSellingResult", true);
 			CONSUME_MP = props.getProperty("BuffStoreConsumeMp", true);
 			MP_MULTIPLIER = Math.max(0.0, props.getProperty("BuffStoreMpMultiplier", 1.0));
+			CONSUME_ITEMS = props.getProperty("BuffStoreConsumeItems", true);
+			CHECK_WEAPON = props.getProperty("BuffStoreCheckWeapon", true);
 			String layout = props.getProperty("BuffStoreListMp", "Craft").trim().toUpperCase();
 			try
 			{

@@ -1,6 +1,7 @@
 package com.l2horizon.CustomQuestsExt.buffstore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import l2.commons.math.SafeMath;
 import l2.commons.threading.RunnableImpl;
 import l2.gameserver.ThreadPoolManager;
 import l2.gameserver.ai.CtrlIntention;
+import l2.gameserver.data.xml.holder.ItemHolder;
 import l2.gameserver.handler.usercommands.UserCommandHandler;
 import l2.gameserver.listener.actor.player.OnPlayerEnterListener;
 import l2.gameserver.listener.actor.player.OnPlayerExitListener;
@@ -32,6 +34,8 @@ import l2.gameserver.network.l2.s2c.ExPrivateStoreSetWholeMsg;
 import l2.gameserver.network.l2.s2c.MagicSkillUse;
 import l2.gameserver.network.l2.s2c.SystemMessage;
 import l2.gameserver.tables.SkillTable;
+import l2.gameserver.templates.item.ItemTemplate;
+import l2.gameserver.utils.ItemFunctions;
 import l2.gameserver.utils.Log;
 import l2.gameserver.utils.Strings;
 import l2.gameserver.utils.TradeHelper;
@@ -407,6 +411,7 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 		List<Skill> skills = new ArrayList<Skill>(count);
 		long total = 0L;
 		double mpNeeded = 0.0;
+		Map<Integer, Long> itemsNeeded = new HashMap<Integer, Long>();
 		try
 		{
 			for(int i = 0; i < count; i++)
@@ -436,15 +441,47 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 					return;
 				}
 				total = SafeMath.addAndCheck(total, entry.price);
-				// the seller must have the MP for every buff of this purchase, like a real cast
+				// the seller must be able to cast every buff of this purchase like a real cast:
+				// MP, the skill's consumables and the weapon the skill requires
 				if(BuffStoreConfig.CONSUME_MP)
 				{
 					mpNeeded += mpCost(skill);
 					if(seller.getCurrentMp() < mpNeeded)
 					{
 						buyer.sendMessage(new CustomMessage("buffstore.noMp", buyer).addString(seller.getName()).addString(buff.name));
+						seller.sendMessage(new CustomMessage("buffstore.sellerNoMp", seller).addString(buff.name));
 						buyer.sendActionFailed();
 						return;
+					}
+				}
+				if(BuffStoreConfig.CHECK_WEAPON && !wieldsAllowedWeapon(seller, skill))
+				{
+					buyer.sendMessage(new CustomMessage("buffstore.noWeapon", buyer).addString(seller.getName()).addString(buff.name));
+					seller.sendMessage(new CustomMessage("buffstore.sellerNoWeapon", seller).addString(buff.name));
+					buyer.sendActionFailed();
+					return;
+				}
+				if(BuffStoreConfig.CONSUME_ITEMS)
+				{
+					int[] consumeIds = skill.getItemConsumeId();
+					int[] consumeCounts = skill.getItemConsume();
+					if(consumeIds != null && consumeCounts != null && consumeCounts.length > 0 && consumeCounts[0] > 0)
+					{
+						for(int c = 0; c < consumeIds.length && c < consumeCounts.length; c++)
+						{
+							long needed = itemsNeeded.containsKey(consumeIds[c]) ? itemsNeeded.get(consumeIds[c]) : 0L;
+							needed += consumeCounts[c];
+							itemsNeeded.put(consumeIds[c], needed);
+							if(ItemFunctions.getItemCount(seller, consumeIds[c]) < needed)
+							{
+								ItemTemplate consumable = ItemHolder.getInstance().getTemplate(consumeIds[c]);
+								String itemName = consumable == null ? String.valueOf(consumeIds[c]) : consumable.getName();
+								buyer.sendMessage(new CustomMessage("buffstore.noItems", buyer).addString(seller.getName()).addString(itemName).addString(buff.name));
+								seller.sendMessage(new CustomMessage("buffstore.sellerNoItems", seller).addString(itemName).addString(buff.name));
+								buyer.sendActionFailed();
+								return;
+							}
+						}
 					}
 				}
 				bought.add(entry);
@@ -480,6 +517,14 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 			}
 			if(BuffStoreConfig.CONSUME_MP)
 				seller.reduceCurrentMp(mpCost(skill), buyer);
+			if(BuffStoreConfig.CONSUME_ITEMS)
+			{
+				int[] consumeIds = skill.getItemConsumeId();
+				int[] consumeCounts = skill.getItemConsume();
+				if(consumeIds != null && consumeCounts != null && consumeCounts.length > 0 && consumeCounts[0] > 0)
+					for(int c = 0; c < consumeIds.length && c < consumeCounts.length; c++)
+						ItemFunctions.removeItem(seller, consumeIds[c], consumeCounts[c], true);
+			}
 			skill.getEffects(seller, buyer, false, false);
 			// the stock private-store feedback: the sale messages name the dummy item, which the
 			// client shows as the buff name, and the selling result fills the seller's sale log
@@ -506,6 +551,17 @@ public final class BuffStoreManager implements OnSetPrivateStoreType, OnPlayerEn
 	private static double mpCost(Skill skill)
 	{
 		return skill.getMpConsume() * BuffStoreConfig.MP_MULTIPLIER;
+	}
+
+	/** the core's weapon dependency: no requirement, or the active or secondary weapon is of an allowed type */
+	private static boolean wieldsAllowedWeapon(Player seller, Skill skill)
+	{
+		long allowed = skill.getWeaponsAllowed();
+		if(allowed == 0L)
+			return true;
+		if(seller.getActiveWeaponInstance() != null && seller.getActiveWeaponItem() != null && (seller.getActiveWeaponItem().getItemType().mask() & allowed) != 0L)
+			return true;
+		return seller.getSecondaryWeaponInstance() != null && seller.getSecondaryWeaponItem() != null && (seller.getSecondaryWeaponItem().getItemType().mask() & allowed) != 0L;
 	}
 
 	private static void tradeFailed(Player buyer)
