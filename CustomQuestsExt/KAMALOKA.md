@@ -149,14 +149,17 @@ table of the Mobius script), `ExitSoloKama` sends the player back and closes the
 **Essence exchange.** The town Pathfinder Worker's "Exchange Essence of Kamaloka" opens
 multisell 8100 (the High Five list without its three Kamaloka Circlet boxes, which the client does
 not have): 10 / 20 / 50 / 100 / 200 essences for a Pathfinder's Reward D / C / B / A / S-Grade
-box (13003-13007, `data/items/13000-13099.xml`). A box is one roll (`data/capsule_items.xml`), the
-High Five chances without the attribute stones and the Icarus weapons, and Dynasty weapon pieces
-where High Five gave full weapons: D 3.2 % Scroll: Enchant Weapon (B); C 1.6 % Scroll: Enchant
-Weapon (A); B 1.1 % Scroll: Enchant Weapon (S); A 2 % Scroll: Enchant Weapon (S), 1 % each Sealed
-Dynasty Helmet / Leather Helmet / Circlet Piece, 0.3 % each of the eleven Dynasty weapon pieces
-(3.3 % for any piece); S 3.8 % Scroll: Enchant Weapon (S) and 0.45 % each of the eleven Dynasty
-weapon pieces (about 5 %). The rest of the roll gives nothing; a weapon needs 18 pieces of one
-kind and its recipe.
+box (13003-13007, `data/items/13000-13099.xml`). A box always gives exactly one item
+(`data/capsule_items.xml`, the chances of a box add up to 100 %), scaled by its price: D 30 %
+Scroll: Enchant Weapon (B) / 70 % Scroll: Enchant Armor (B); C 30 % Scroll: Enchant Weapon (A) /
+70 % Scroll: Enchant Armor (A); B 30 % Scroll: Enchant Weapon (S) / 50 % Scroll: Enchant Armor (S)
+/ 20 % one of the eleven Dynasty weapon pieces; A 50 % one of the eleven Dynasty weapon pieces /
+25 % one of the Sealed Dynasty Helmet, Leather Helmet and Circlet Pieces / 25 % Scroll: Enchant
+Armor (S); S 60 % one of the eleven Dynasty weapon pieces / 40 % Scroll: Enchant Weapon (S). The
+High Five attribute stones, Icarus weapons and full Dynasty weapons are left out; the piece
+chances are spread evenly over the eleven weapons, and a weapon needs 18 pieces of one kind and
+its recipe. The essences are capped per day (at most 17 from Rim Kamaloka and 19 from the top
+Labyrinth), so an S box is about six days of play.
 
 | key | default | meaning |
 |---|---|---|
