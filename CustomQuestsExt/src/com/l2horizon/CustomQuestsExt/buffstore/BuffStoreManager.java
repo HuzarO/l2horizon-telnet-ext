@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * count 1, store price 0).
  *
  * <ul>
- * <li>/buff (user command 100) - {@link #openSetup}: the stock manage-list layout with
+ * <li>/buff (user command 171) - {@link #openSetup}: the stock manage-list layout with
  * section A = the buffs the player has learned, section B = the saved entries;</li>
  * <li>Start - {@link #start} from the shadowed SetPrivateStoreSellList: validates the
  * list, persists it, sets store type 10 (the core sits the player) and broadcasts the

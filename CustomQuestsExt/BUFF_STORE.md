@@ -10,7 +10,7 @@ inventory: the buffs travel through the stock private-store packets as **dummy b
 items** `81000-81499`, which exist only as item templates and client rows.
 
 The client side (store type 10 in `UserInfo`/`CharInfo`, the bubble, the window
-titles, `/buff` = user command 100, the dummy id range) is a client patch owned by
+titles, `/buff` = user command 171, the dummy id range) is a client patch owned by
 the server admin; this document is the server side that fulfils that contract.
 
 ## Files
@@ -34,7 +34,7 @@ Extension (`CustomQuestsExt`, package `com.l2horizon.CustomQuestsExt.buffstore`)
 | `BuffStoreTable` | `data/buff_store.xml`, validated against the item and skill tables at load |
 | `BuffStore` | per-player state: entries, bubble title, setup-pending flag; persisted in the player variables `buffstore` / `buffstoretitle` |
 | `BuffStoreManager` | the whole flow: setup window, Start, Stop, Message, buyer window, purchase, store-type listener, login restore, bubble replay |
-| `BuffStoreUserCommand` | `/buff` = user command 100 |
+| `BuffStoreUserCommand` | `/buff` = user command 171 (`CommandName_Classic-eu.dat` row `id=171 action=171 cmd=[buff]`; the client sends the action value) |
 | `BuffStoreOfflineCommand` | wraps the core `.offline` command so `BuffStoreAllowOffline` can forbid offline buff stores |
 | `BuffStoreManageListSell`, `BuffStoreListSell`, `BuffStoreMsgSell` | the stock `PrivateStoreManageListSell` (0xA0), `PrivateStoreListSell` (0xA1) and `PrivateStoreMsgSell` (0xA2) layouts fed with synthetic entries (objectId = itemId = dummy id, count 1, store price 0) |
 
@@ -48,7 +48,7 @@ classes are replaced on the classpath; the item-store behaviour of each is uncha
 
 | Step | Client packet | Server |
 |---|---|---|
-| `/buff` | `RequestUserCommand(100)` | `openSetup`: closes any open store (like the stock "Private Store - Sell" action), runs the stock `TradeHelper.checksIfCanOpenStore` checks, sends the manage list: section A = learned buffs of the table, section B = the saved entries with prices |
+| `/buff` | `RequestUserCommand(171)` | `openSetup`: closes any open store (like the stock "Private Store - Sell" action), runs the stock `TradeHelper.checksIfCanOpenStore` checks, sends the manage list: section A = learned buffs of the table, section B = the saved entries with prices |
 | Start | `SetPrivateStoreListSell` with dummy ids | `start`: every id must be a table entry the player has learned, count 1, price within the limits, no duplicates, at most `privateStoreSellLimit` entries; then the entries are persisted, the store type becomes 10 (the core sits the player, stores `storemode=10`, broadcasts CharInfo) and `ExPrivateStoreSetWholeMsg` carries the bubble text to everyone including the seller |
 | Stop / ESC / X | `RequestPrivateStoreQuitSell` | `quit`: closes a buff store (the core stands the player up); silent when nothing is open |
 | context menu close | `RequestActionUse` (Private Store - Sell) | the core resets the type and sends its item manage list; the store-type listener sees the reset came from `RequestActionUse` and re-sends the buff setup window with the previous entries once the stand-up finished |

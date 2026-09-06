@@ -4,11 +4,12 @@ import l2.gameserver.handler.usercommands.IUserCommandHandler;
 import l2.gameserver.model.Player;
 
 /**
- * /buff - user command 100 (CommandName_Classic-eu.dat): opens the Private Store (Buff) setup window.
+ * /buff - user command 171 (CommandName_Classic-eu.dat: id=171 action=171 cmd=[buff]; the client
+ * sends the action value in RequestUserCommand): opens the Private Store (Buff) setup window.
  */
 public class BuffStoreUserCommand implements IUserCommandHandler
 {
-	public static final int COMMAND_ID = 100;
+	public static final int COMMAND_ID = 171;
 	private static final int[] COMMANDS = { COMMAND_ID };
 
 	@Override
