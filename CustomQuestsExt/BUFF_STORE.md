@@ -93,7 +93,7 @@ The number of buffs a seller can list is `BuffStoreBaseSlots` (4) plus the learn
 level of **Expand Buff Store** (skill 90174, `data/stats/skills/90100-90199.xml`): a
 26-level passive marker skill without effects, sold by the Fishing Guild for Proof
 of Catching a Fish like the other Expand skills (`data/skill_tree/fishing_skill_tree.xml`,
-levels 1-26 from character level 20 to 76, 2,000 to 100,000 PCOF per level,
+levels 1-26 all available from character level 1, 2,000 to 100,000 PCOF per level,
 1,030,000 in total), so 30 buffs with every level. The server enforces it in Start
 (`buffstore.tooMany`); the client's setup window has to allow the same number
 (the stock window caps at the item-store `privateStoreSellLimit` of `UserInfo`).
