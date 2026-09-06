@@ -153,9 +153,10 @@ box (13003-13007, `data/items/13000-13099.xml`). A box is one roll (`data/capsul
 High Five chances without the attribute stones and the Icarus weapons, and Dynasty weapon pieces
 where High Five gave full weapons: D 3.2 % Scroll: Enchant Weapon (B); C 1.6 % Scroll: Enchant
 Weapon (A); B 1.1 % Scroll: Enchant Weapon (S); A 2 % Scroll: Enchant Weapon (S), 1 % each Sealed
-Dynasty Helmet / Leather Helmet / Circlet Piece, 0.1 % each of the eleven Dynasty weapon pieces;
-S 3.8 % Scroll: Enchant Weapon (S) and 0.3 % each of the eleven Dynasty weapon pieces. The rest of
-the roll gives nothing.
+Dynasty Helmet / Leather Helmet / Circlet Piece, 0.3 % each of the eleven Dynasty weapon pieces
+(3.3 % for any piece); S 3.8 % Scroll: Enchant Weapon (S) and 0.45 % each of the eleven Dynasty
+weapon pieces (about 5 %). The rest of the roll gives nothing; a weapon needs 18 pieces of one
+kind and its recipe.
 
 | key | default | meaning |
 |---|---|---|
