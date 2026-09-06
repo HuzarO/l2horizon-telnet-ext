@@ -53,8 +53,8 @@ classes are replaced on the classpath; the item-store behaviour of each is uncha
 | Stop / ESC / X | `RequestPrivateStoreQuitSell` | `quit`: closes a buff store (the core stands the player up); silent when nothing is open |
 | context menu close | `RequestActionUse` (Private Store - Sell) | the core resets the type and sends its item manage list; the store-type listener sees the reset came from `RequestActionUse` and re-sends the buff setup window with the previous entries once the stand-up finished |
 | Message | `SetPrivateStoreMsgSell` (29 chars) | `setTitle`: stored, echoed back as `PrivateStoreMsgSell` for the prefill, broadcast as `ExPrivateStoreSetWholeMsg` while the store is open |
-| buyer double-click | `Action` | targeted seller with type 10: in range -> `PrivateStoreListSell` layout with the entries; out of range -> the core walks the buyer there and the window opens on arrival |
-| Buy | `RequestPrivateStoreBuy` | `buy`: seller still type 10 and within 200, both alive, every objectId a listed entry with count 1 and the listed price, sum with overflow check, adena moved (optional tax), `skill.getEffects(seller, buyer)` per buff at the seller's learned level (or the table's fixed `level`), cast animation, the stock sale messages to both sides (`S2 is sold to C1 for S3 adena` / `S2 has been purchased from C1 at S3 adena`, the item name being the buff name), `ExPrivateStoreSellingResult(dummy id, 1, buyer)` to the seller for the client's sale log, `log/buffstore` line; the store stays open |
+| buyer double-click | `Action` | targeted seller with type 10: in range -> `PrivateStoreListSell` layout with the entries and the seller's current/maximum MP in the header (`BuffStoreListMp`, default the RecipeShopSellList positions); out of range -> the core walks the buyer there and the window opens on arrival |
+| Buy | `RequestPrivateStoreBuy` | `buy`: seller still type 10 and within 200, both alive, every objectId a listed entry with count 1 and the listed price, sum with overflow check, the seller's current MP covers the MP cost of every bought buff (`BuffStoreConsumeMp`, refused before any adena moves otherwise), adena moved (optional tax), the MP spent, `skill.getEffects(seller, buyer)` per buff at the seller's learned level (or the table's fixed `level`), cast animation, the stock sale messages to both sides (`S2 is sold to C1 for S3 adena` / `S2 has been purchased from C1 at S3 adena`, the item name being the buff name), `ExPrivateStoreSellingResult(dummy id, 1, buyer)` to the seller for the client's sale log, `log/buffstore` line; the store stays open |
 
 Bubble replay: the core re-sends store messages on visibility only for its own store
 types, so a task (`BuffStoreBubbleRefreshSeconds`) sends `ExPrivateStoreSetWholeMsg`
@@ -83,6 +83,8 @@ state. Nothing else is needed because every buff store rule keys on the store ty
 | `BuffStoreBubbleRefreshSeconds` | 2 | bubble replay interval |
 | `BuffStoreCastAnimation` | True | `MagicSkillUse` on every sold buff |
 | `BuffStoreSellingResult` | True | `ExPrivateStoreSellingResult` to the seller per sold buff (sale log / report); the stock client lowers the entry's count on it, so the buff range should skip that decrement in `PrivateShopWnd` |
+| `BuffStoreConsumeMp` / `BuffStoreMpMultiplier` | True / 1.0 | the seller needs and spends the skill's MP (initial + cast cost, times the multiplier) per sold buff |
+| `BuffStoreListMp` | Craft | header layout of the buyer's list: `Craft` = seller id, current MP, max MP, adena, count (the RecipeShopSellList header); `Insert` = MP after the seller id, rest stock; `Unknown` = the unused stock field carries the current MP; `Stock` = no MP |
 
 The number of buffs a seller can list is the stock private store slot limit the
 client reads from `UserInfo` (`MaxPvtStoreSlotsDwarf` / `MaxPvtStoreSlotsOther` in
