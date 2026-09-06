@@ -23,6 +23,26 @@ The manager loads as a script (`ScriptFile.onLoad`) once the world is up, reads
 attaches its death listener to every spawned NPC and re-checks the stage every
 `HellboundStageCheckMinutes`.
 
+## PvP island
+
+`gameserver/data/zone/hellbound.xml` declares `[hellbound_pvp]`, a
+`battle_zone` over the same rectangle as `[Hellbound_territory]` (map tiles
+19_25 and 20_25, every height). The core's battle zone rules then apply on
+the whole island:
+
+- every other player can be attacked without Ctrl (party members excepted),
+  nobody is flagged purple for it, and the client shows the combat zone
+  message and the PvP compass indicator;
+- a kill gives no karma and no PK count; it counts as a PvP kill only when
+  `PvPCountingInBattleZone = True` in `config/pvp.properties` (that switch
+  also covers the Olympiad stadiums and the other battle zones);
+- dying on the island costs no EXP (the core skips the death penalty in
+  battle zones, monsters included);
+- players inside and outside the zone cannot attack each other, so the
+  warpgate shore is not a camping spot from the sea.
+
+Remove or rename the file to make the island peaceful again.
+
 ## Trust stages
 
 Trust points live in `ServerVariables` (`HellboundConfidence`, `HB_judesBoxes`,
