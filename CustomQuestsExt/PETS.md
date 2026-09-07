@@ -17,12 +17,15 @@ live in this extension, everything else is datapack data
 * The pet must be summoned, alive, next to the manager and at the required
   level; the pet keeps its name and its experience, the player summons it again
   with the new necklace (the enchant level of the necklace is the pet level).
-* Baby pets: the **Pet Exchange Tickets** 7583 / 7584 / 7585 are now sold in
-  every pet manager's shop (**Purchase pet items**, 500,000 adena reference
-  price, so 600,000 with the 20% shop markup) and are exchanged for the baby
-  pet on the manager's **Exchange the pet trade ticket with a pet** page as
-  before; some clan halls still hand them out too. The shops also sell Great
-  Wolf Food 9668 and Improved Baby Pet Food 10425.
+* Baby pets: the **Pet Exchange Tickets** are quest rewards, as on retail:
+  Help the Uncle! (quest 42, Pet Manager Waters 30828, level 25) gives the
+  Buffalo ticket 7583, Help the Sister! (43, Pet Manager Cooper 30829, level
+  26) the Cougar ticket 7584 and Help the Son! (44, Pet Manager Lundy 30827,
+  level 24) the Kookaburra ticket 7585; some clan halls produce them as well.
+  The ticket is exchanged for the baby pet on the manager's **Exchange the pet
+  trade ticket with a pet** page, whose text and the "no ticket" reply point
+  at the quests. The tickets are not sold anywhere. The pet manager shops
+  sell Great Wolf Food 9668 and Improved Baby Pet Food 10425.
 * The core's baby pet AI (`PetBabyInstance`) checks the owner every second.
   Baby pets cast Heal Trick 4717 when the owner is below 90% HP and Greater
   Heal Trick 4718 below 33%, with a chance that grows as the HP drops (the
@@ -142,15 +145,17 @@ added for all of them.
   Fenrir, also when ridden) and 10425 Improved Baby Pet Food (the three
   improved pets) are pet food now (skill 2048 levels 3 and 4, `is_pet_food`,
   `has_pet` conditions), like Food for Wolves and Baby Spice.
-* `data/merchant_buylists.xml`: the eleven pet manager shops sell 9668, 10425
-  and the three tickets.
+* `data/merchant_buylists.xml`: the eleven pet manager shops sell 9668 and
+  10425.
 * HTML: `petmanager/pet_evolution.htm` (en new, ru rewritten), the evolve link
   on the eleven manager pages (en + ru), the ticket page tells where tickets
   come from, the petevolve message pages (en additions, ru set).
 
 ## Client
 
-ItemName / EtcItemgrp rows for 9668, 9882, 10311, 10312, 10313, 10425 and
+ItemName / EtcItemgrp rows for 9668, 9882, 10311, 10312, 10313, 10425, the
+ticket rows 7583 / 7584 / 7585 with a description and `related_quest_id`
+(42 / 43 / 44, the client shows the quest in the tooltip), and
 Skillgrp / SkillName rows for the 41 new skill levels, built from the High Five
 tables (`tools/client/README.md`, "Pet rows"). The pet NPCs were already in the
 Classic tables (NpcName calls 16025 "Great Black Wolf").
@@ -166,4 +171,5 @@ Classic tables (NpcName calls 16025 "Great Black Wolf").
   pets and the improved baby pets heal and recharge only while the owner is in
   combat (about 15 s after the last hit); it is False now, like retail: the
   pets act whenever the owner's HP or MP is low.
-* The tickets stay in the clan hall item lists as before.
+* The tickets stay in the clan hall item lists as before; they were briefly
+  in the pet manager shops and are not any more.
