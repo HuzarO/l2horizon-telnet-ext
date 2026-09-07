@@ -28,8 +28,9 @@ import l2.gameserver.templates.npc.NpcTemplate;
  * ...). Here the level of each buff grows with the pet's level: level 1 at pet
  * level 55, the top level at pet level 80, linearly in between (a 6-level buff
  * gains a level every 5 pet levels, a 3-level buff at 62 and 74, a 2-level buff
- * at 68). Which buffs a pet has at 55 / 60 / 65 / 70 is unchanged, and so is
- * everything else: the heals, the recharge, the buff task and its timing.
+ * at 68). Which buffs a pet has at 55 / 60 / 65 / 70 is unchanged. Pet Recharge
+ * is always cast at its top level and the improved pets' heals follow the retail
+ * pet skill curve (see getHealLevel); the buff task and its timing are the core's.
  *
  * Shadows l2.gameserver.model.instances.PetBabyInstance (final, created directly
  * by PetDAO, so it cannot be extended); the extension jar precedes server.jar on
@@ -259,14 +260,29 @@ public final class PetBabyInstance extends PetInstance
 		super.unSummon();
 	}
 
+	/**
+	 * Heal level. Baby pets: the core's curve (level 1 to 12 over the pet's levels).
+	 * Improved baby pets: the retail pet skill curve (pet level / 10 below 70, then 7
+	 * and one more every 5 levels), so Pet Greater Heal and Pet Battle Heal are level
+	 * 5 at pet level 55 and level 9 at 80 instead of starting at level 1 at 55.
+	 */
 	public int getHealLevel()
 	{
+		if(_data.isImprovedBabyPet())
+			return retailSkillLevel(12);
 		return Math.min(Math.max((getLevel() - getMinLevel()) / ((80 - getMinLevel()) / 12), 1), 12);
 	}
 
+	/** Pet Recharge is always cast at its top level: even there it restores little MP, and restoring MP is the point of the pet */
 	public int getRechargeLevel()
 	{
-		return Math.min(Math.max((getLevel() - getMinLevel()) / ((80 - getMinLevel()) / 8), 1), 8);
+		return Math.max(SkillTable.getInstance().getMaxLevel(PET_RECHARGE), 1);
+	}
+
+	private int retailSkillLevel(int max)
+	{
+		int level = getLevel() < 70 ? getLevel() / 10 : 7 + (getLevel() - 70) / 5;
+		return Math.min(Math.max(level, 1), max);
 	}
 
 	/** buff tier: 0 at 55-59, 1 at 60-64, 2 at 65-69, 3 from 70 */
