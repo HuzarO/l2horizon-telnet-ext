@@ -62,7 +62,27 @@ live in this extension, everything else is datapack data
   player's runs out. The client SkillName rows of these skills spell out the
   exact value per level.
 
-## Extension (`src/services/petevolve`)
+  The level of each buff grows with the pet's level (this is the one core
+  class the feature shadows, `l2.gameserver.model.instances.PetBabyInstance`,
+  see below): level 1 at pet level 55 and the top level at pet level 80,
+  linearly in between. A 6-level buff (Blessed Body, Blessed Soul,
+  Concentration) gains a level every 5 pet levels; a 3-level buff (Empower,
+  Might, Shield, Acumen, Guidance, Focus, Death Whisper) reaches level 2 at 62
+  and level 3 at 74; Haste (2 levels) reaches level 2 at 68; Vampiric Rage
+  (4 levels) reaches 2 / 3 / 4 at 59 / 67 / 76. So a fresh level-55 Improved
+  Kookaburra gives Empower 1 (+20% M. Atk.) and Blessed Soul 1 (+5% MP), a
+  level-80 one Empower 3 (+30%) and Blessed Soul 6 (+15%).
+
+## Extension (`src/services/petevolve`, `src/l2/gameserver/model/instances/PetBabyInstance.java`)
+
+`PetBabyInstance` is the core's baby pet class (heals, recharge, buff task)
+copied with one change: `getBuffs()` picks each buff's level from the pet's
+level (`getBuffSkillLevel`) instead of always using the top level. The class
+is final and created directly by `PetDAO`, so it cannot be extended; the
+extension jar precedes server.jar on the class path, so this copy is the one
+the server loads. Everything else in it (which buffs unlock at 55 / 60 / 65 /
+70, heal and recharge levels, timing) is the core's logic unchanged.
+
 
 `PetEvolution` (abstract, extends `Functions`) does the work; `wolfevolve`,
 `fenrir`, `ibbuffalo`, `ibcougar` and `ibkookaburra` only supply the ids and
