@@ -29,8 +29,11 @@ import l2.gameserver.templates.npc.NpcTemplate;
  * level 55, the top level at pet level 80, linearly in between (a 6-level buff
  * gains a level every 5 pet levels, a 3-level buff at 62 and 74, a 2-level buff
  * at 68). Which buffs a pet has at 55 / 60 / 65 / 70 is unchanged. The improved
- * pets' heals and recharge follow the retail pet skill curve (see getHealLevel);
- * the buff task and its timing are the core's.
+ * pets' heals and recharge follow the retail pet skill curve (see getHealLevel).
+ * The plain Baby Kookaburra, which the core leaves without a recharge until it
+ * evolves, casts Baby Pet Recharge 40310 (an l2horizon skill: 15 MP at pet level
+ * 5 up to 145 MP at 55, exactly Pet Recharge 5 of a fresh improved pet). The buff
+ * task and its timing are the core's.
  *
  * Shadows l2.gameserver.model.instances.PetBabyInstance (final, created directly
  * by PetDAO, so it cannot be extended); the extension jar precedes server.jar on
@@ -45,6 +48,9 @@ public final class PetBabyInstance extends PetInstance
 	private static final int PET_GREATER_HEAL = 5195;
 	private static final int PET_BATTLE_HEAL = 5590;
 	private static final int PET_RECHARGE = 5200;
+	/** the Baby Kookaburra's own recharge (l2horizon skill, 11 levels, pet level / 5) */
+	private static final int BABY_PET_RECHARGE = 40310;
+	private static final int BABY_KOOKABURRA = 12781;
 
 	private static final int PET_HASTE = 5186;
 	private static final int PET_VAMPIRIC_RAGE = 5187;
@@ -155,11 +161,11 @@ public final class PetBabyInstance extends PetInstance
 							skill = SkillTable.getInstance().getInfo(improved ? PET_GREATER_HEAL : HEAL_TRICK, getHealLevel());
 					}
 
-					if(skill == null && _data.isImprovedBabyKookaburra())
+					if(skill == null && (_data.isImprovedBabyKookaburra() || isBabyKookaburra()))
 					{
 						double mpPercent = owner.getCurrentMpPercents();
 						if(mpPercent < 66 && Rnd.chance((100 - mpPercent) / 2))
-							skill = SkillTable.getInstance().getInfo(PET_RECHARGE, getRechargeLevel());
+							skill = _data.isImprovedBabyKookaburra() ? SkillTable.getInstance().getInfo(PET_RECHARGE, getRechargeLevel()) : SkillTable.getInstance().getInfo(BABY_PET_RECHARGE, getBabyRechargeLevel());
 					}
 
 					if(skill != null && skill.checkCondition(this, owner, false, !isFollowMode(), true))
@@ -277,6 +283,18 @@ public final class PetBabyInstance extends PetInstance
 	public int getRechargeLevel()
 	{
 		return retailSkillLevel(8);
+	}
+
+	/** the plain Baby Kookaburra (the improved one has its own flag in pet_data) */
+	public boolean isBabyKookaburra()
+	{
+		return _data.isBabyPet() && getNpcId() == BABY_KOOKABURRA;
+	}
+
+	/** Baby Pet Recharge level: pet level / 5, 1 to 11 (level 11 at pet level 55 restores what Pet Recharge 5 does) */
+	public int getBabyRechargeLevel()
+	{
+		return Math.min(Math.max(Math.round(getLevel() / 5f), 1), 11);
 	}
 
 	private int retailSkillLevel(int max)

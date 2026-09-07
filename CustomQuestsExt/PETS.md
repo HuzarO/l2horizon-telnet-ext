@@ -40,7 +40,19 @@ live in this extension, everything else is datapack data
   at 75, 9 at 80 (909 / 500; Pet Recharge tops out at its level 8, 155 MP,
   from pet level 75). The core's own curve would start all three at level 1
   at pet level 55 (91 / 50 HP, 120 MP). The plain baby pets keep the core's
-  curve for Heal Trick and Greater Heal Trick. From level 55 the
+  curve for Heal Trick and Greater Heal Trick.
+* The plain **Baby Kookaburra** also recharges its master (the core gives it
+  nothing but the heals until it evolves): **Baby Pet Recharge** 40310, an
+  l2horizon skill with 11 levels, level = pet level / 5. It restores 15 MP at
+  pet level 5, 54 at 20, 93 at 35, 132 at 50 and 145 from 55, which is exactly
+  what Pet Recharge 5, the fresh improved pet's level, restores, so the
+  evolution changes nothing. The costs stay within the baby's MP pool (10 MP at
+  level 1, 100 at level 11) and the magic level runs 10 above the pet level, so
+  the recharge keeps its full effect on a master up to 15 levels above the pet
+  (the core cuts a mana heal by 5% per level the target is more than 5 levels
+  above the skill's magic level). Same trigger as the improved pet: master
+  below 66% MP, after the heal check. Client rows in `tools/client/skill_rows`
+  (Skillgrp, SkillName) and the sound rows of Pet Recharge for it. From level 55 the
   improved pets also buff their owner, a stronger set every 5 levels:
 
   | Pet | 55 | 60 | 65 | 70 |
@@ -89,7 +101,8 @@ live in this extension, everything else is datapack data
 copied with three changes: `getBuffs()` picks each buff's level from the pet's
 level (`getBuffSkillLevel`) instead of always using the top level,
 `getHealLevel()` and `getRechargeLevel()` use the retail pet skill curve for
-the improved pets. The class
+the improved pets, and the plain Baby Kookaburra casts Baby Pet Recharge 40310
+(`getBabyRechargeLevel()`). The class
 is final and created directly by `PetDAO`, so it cannot be extended; the
 extension jar precedes server.jar on the class path, so this copy is the one
 the server loads. Everything else in it (which buffs unlock at 55 / 60 / 65 /
