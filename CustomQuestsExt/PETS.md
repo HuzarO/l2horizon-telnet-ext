@@ -31,15 +31,36 @@ live in this extension, everything else is datapack data
   Kookaburra uses Pet Battle Heal below 33% HP and Pet Recharge 5200 when the
   owner is below 66% MP. That is the retail split: only the improved
   Kookaburra restores MP, the plain baby pets restore HP. From level 55 the
-  improved pets also buff their
-  owner with the retail sets (Might, Shield, Blessed Body, Guidance, Vampiric
-  Rage, Haste, Focus, Death Whisper for the Buffalo; Empower, Blessed Soul,
-  Blessed Body, Shield, Acumen, Concentration for the Kookaburra; Empower,
-  Might, Shield, Blessed Body, Acumen, Haste, Vampiric Rage, Focus for the
-  Cougar), a stronger set every 5 levels (55, 60, 65, 70). The buff levels
-  share the stack types of the player buffs (Blessed Body = `hp_up`, Blessed
-  Soul = `mp_up`, Vampiric Rage = `vampRage`), so they do not stack with a
-  Prophet's buffs, they replace weaker ones like on retail.
+  improved pets also buff their owner, a stronger set every 5 levels:
+
+  | Pet | 55 | 60 | 65 | 70 |
+  |---|---|---|---|---|
+  | Buffalo | Might 3, Blessed Body 6 | Shield 3, Guidance 3 | Vampiric Rage 4, Haste 2 | Focus 3, Death Whisper 3 |
+  | Kookaburra | Empower 3, Blessed Soul 6 | Blessed Body 6, Shield 3 | Acumen 3, Concentration 6 | (same) |
+  | Cougar | Empower 3, Might 3 | Shield 3, Blessed Body 6 | Acumen 3, Haste 2 | Vampiric Rage 4, Focus 3 |
+
+  The pet recasts a buff when it is about to run out (as long as it has MP),
+  so the buffs are permanent while the pet is out. On High Five the pet
+  skills carried the Prophet's top-level values; on this server they are a
+  weaker fallback for players without a buffer (skill data only, the core's
+  choice of skill levels is untouched):
+
+  | Pet skill (level the pet casts) | High Five | l2horizon |
+  |---|---|---|
+  | Pet Blessed Body 6 / Pet Blessed Soul 6 | +35% HP / MP, 20 min | +15%, 2 min |
+  | Pet Empower 3 | +75% M. Atk. | +30% |
+  | Pet Might 3 / Pet Shield 3 | +15% P. Atk. / P. Def. | +8% |
+  | Pet Acumen 3 / Pet Haste 2 | +30% / +33% | +15% / +15% |
+  | Pet Vampiric Rage 4 | 9% absorbed | 5% |
+  | Pet Focus 3 / Pet Death Whisper 3 | +30 crit. rate / +35% crit. dmg | +15 / +15% |
+  | Pet Guidance 3 | +4 accuracy | +2 |
+  | Pet Concentration 6 | -53% cancel chance | -26% |
+
+  Every pet buff has stack order 0 while the player buffs start at 1, so a
+  Prophet's (or any player's) buff of the same kind always replaces the pet's
+  and the pet never overwrites it; the pet's buff lands again once the
+  player's runs out. The client SkillName rows of these skills spell out the
+  exact value per level.
 
 ## Extension (`src/services/petevolve`)
 
