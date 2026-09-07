@@ -33,14 +33,14 @@ live in this extension, everything else is datapack data
   Greater Heal 5195 and Pet Battle Heal 5590 the same way; the Improved Baby
   Kookaburra uses Pet Battle Heal below 33% HP and Pet Recharge 5200 when the
   owner is below 66% MP. That is the retail split: only the improved
-  Kookaburra restores MP, the plain baby pets restore HP. Pet Recharge is
-  always cast at its top level 8 (155 MP; even that is modest, and restoring
-  MP is the point of the pet). The improved pets' heals follow the retail pet
-  skill curve, pet level / 10 below 70 and 7 plus one per 5 levels from 70:
-  level 5 at pet level 55 (Pet Battle Heal 544, Pet Greater Heal 299), 6 at
-  60, 7 at 70, 8 at 75, 9 at 80 (909 / 500). The core's own curve would start
-  both at level 1 at pet level 55 (91 / 50 HP). The plain baby pets keep the
-  core's curve for Heal Trick and Greater Heal Trick. From level 55 the
+  Kookaburra restores MP, the plain baby pets restore HP. The improved pets'
+  heals and recharge follow the retail pet skill curve, pet level / 10 below
+  70 and 7 plus one per 5 levels from 70: level 5 at pet level 55 (Pet Battle
+  Heal 544, Pet Greater Heal 299, Pet Recharge 145 MP), 6 at 60, 7 at 70, 8
+  at 75, 9 at 80 (909 / 500; Pet Recharge tops out at its level 8, 155 MP,
+  from pet level 75). The core's own curve would start all three at level 1
+  at pet level 55 (91 / 50 HP, 120 MP). The plain baby pets keep the core's
+  curve for Heal Trick and Greater Heal Trick. From level 55 the
   improved pets also buff their owner, a stronger set every 5 levels:
 
   | Pet | 55 | 60 | 65 | 70 |
@@ -88,8 +88,8 @@ live in this extension, everything else is datapack data
 `PetBabyInstance` is the core's baby pet class (heals, recharge, buff task)
 copied with three changes: `getBuffs()` picks each buff's level from the pet's
 level (`getBuffSkillLevel`) instead of always using the top level,
-`getRechargeLevel()` always returns the top level of Pet Recharge, and
-`getHealLevel()` uses the retail pet skill curve for the improved pets. The class
+`getHealLevel()` and `getRechargeLevel()` use the retail pet skill curve for
+the improved pets. The class
 is final and created directly by `PetDAO`, so it cannot be extended; the
 extension jar precedes server.jar on the class path, so this copy is the one
 the server loads. Everything else in it (which buffs unlock at 55 / 60 / 65 /

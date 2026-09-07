@@ -28,9 +28,9 @@ import l2.gameserver.templates.npc.NpcTemplate;
  * ...). Here the level of each buff grows with the pet's level: level 1 at pet
  * level 55, the top level at pet level 80, linearly in between (a 6-level buff
  * gains a level every 5 pet levels, a 3-level buff at 62 and 74, a 2-level buff
- * at 68). Which buffs a pet has at 55 / 60 / 65 / 70 is unchanged. Pet Recharge
- * is always cast at its top level and the improved pets' heals follow the retail
- * pet skill curve (see getHealLevel); the buff task and its timing are the core's.
+ * at 68). Which buffs a pet has at 55 / 60 / 65 / 70 is unchanged. The improved
+ * pets' heals and recharge follow the retail pet skill curve (see getHealLevel);
+ * the buff task and its timing are the core's.
  *
  * Shadows l2.gameserver.model.instances.PetBabyInstance (final, created directly
  * by PetDAO, so it cannot be extended); the extension jar precedes server.jar on
@@ -273,10 +273,10 @@ public final class PetBabyInstance extends PetInstance
 		return Math.min(Math.max((getLevel() - getMinLevel()) / ((80 - getMinLevel()) / 12), 1), 12);
 	}
 
-	/** Pet Recharge is always cast at its top level: even there it restores little MP, and restoring MP is the point of the pet */
+	/** Pet Recharge level: the retail pet skill curve as well (level 5 at pet level 55, 6 at 60, 7 at 70, 8 from 75) */
 	public int getRechargeLevel()
 	{
-		return Math.max(SkillTable.getInstance().getMaxLevel(PET_RECHARGE), 1);
+		return retailSkillLevel(8);
 	}
 
 	private int retailSkillLevel(int max)
