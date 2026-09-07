@@ -1,5 +1,8 @@
 package services.petevolve;
 
+import l2.gameserver.Config;
+import l2.gameserver.model.Player;
+
 /** Baby Buffalo (level 55+) into an Improved Baby Buffalo: Baby Buffalo Panpipe 6648 becomes Improved Buffalo Panpipe 10311. */
 public class ibbuffalo extends PetEvolution
 {
@@ -43,5 +46,11 @@ public class ibbuffalo extends PetEvolution
 	protected String successPage()
 	{
 		return "yes_pet.htm";
+	}
+
+	@Override
+	protected String classRefusedPage(Player player)
+	{
+		return Config.ALT_IMPROVED_PETS_LIMITED_USE && player.isMageClass() ? "no_class_w.htm" : null;
 	}
 }

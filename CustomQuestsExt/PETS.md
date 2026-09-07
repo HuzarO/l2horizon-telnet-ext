@@ -23,8 +23,15 @@ live in this extension, everything else is datapack data
   pet on the manager's **Exchange the pet trade ticket with a pet** page as
   before; some clan halls still hand them out too. The shops also sell Great
   Wolf Food 9668 and Improved Baby Pet Food 10425.
-* Improved baby pets heal (Pet Greater Heal 5195 / Pet Battle Heal 5590), the
-  Kookaburra recharges (Pet Recharge 5200), and from level 55 they buff their
+* The core's baby pet AI (`PetBabyInstance`) checks the owner every second.
+  Baby pets cast Heal Trick 4717 when the owner is below 90% HP and Greater
+  Heal Trick 4718 below 33%, with a chance that grows as the HP drops (the
+  heal level follows the pet level). Improved Baby Buffalo and Cougar use Pet
+  Greater Heal 5195 and Pet Battle Heal 5590 the same way; the Improved Baby
+  Kookaburra uses Pet Battle Heal below 33% HP and Pet Recharge 5200 when the
+  owner is below 66% MP. That is the retail split: only the improved
+  Kookaburra restores MP, the plain baby pets restore HP. From level 55 the
+  improved pets also buff their
   owner with the retail sets (Might, Shield, Blessed Body, Guidance, Vampiric
   Rage, Haste, Focus, Death Whisper for the Buffalo; Empower, Blessed Soul,
   Blessed Body, Shield, Acumen, Concentration for the Kookaburra; Empower,
@@ -111,7 +118,11 @@ Classic tables (NpcName calls 16025 "Great Black Wolf").
 
 * The datapack's own Great Snow Wolf 16037 table starts six levels early (its
   level-49 row holds the retail level-55 values); it was left as it was.
-* No class restriction on the improved pets (the High Five
-  `ALT_IMPROVED_PETS_LIMITED_USE` option is not part of this core): any class
-  may evolve any baby pet.
+* `ImprovedPetsLimitedUse` (altsettings.properties, False) is honored like on
+  High Five: when it is True a mage cannot evolve a Baby Buffalo and a fighter
+  cannot evolve a Baby Kookaburra (`no_class_w.htm` / `no_class_m.htm`).
+* `PetsHealOnlyInBattle` (altsettings.properties) was True, which let the baby
+  pets and the improved baby pets heal and recharge only while the owner is in
+  combat (about 15 s after the last hit); it is False now, like retail: the
+  pets act whenever the owner's HP or MP is low.
 * The tickets stay in the clan hall item lists as before.

@@ -1,5 +1,8 @@
 package services.petevolve;
 
+import l2.gameserver.Config;
+import l2.gameserver.model.Player;
+
 /** Baby Kookaburra (level 55+) into an Improved Baby Kookaburra: Baby Kookaburra Ocarina 6650 becomes Improved Kookaburra Ocarina 10313. */
 public class ibkookaburra extends PetEvolution
 {
@@ -43,5 +46,11 @@ public class ibkookaburra extends PetEvolution
 	protected String successPage()
 	{
 		return "yes_pet.htm";
+	}
+
+	@Override
+	protected String classRefusedPage(Player player)
+	{
+		return Config.ALT_IMPROVED_PETS_LIMITED_USE && !player.isMageClass() ? "no_class_m.htm" : null;
 	}
 }

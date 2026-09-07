@@ -1,5 +1,6 @@
 package services.petevolve;
 
+import l2.gameserver.Config;
 import l2.gameserver.data.xml.holder.PetDataHolder;
 import l2.gameserver.model.PetData;
 import l2.gameserver.model.Player;
@@ -47,6 +48,16 @@ public abstract class PetEvolution extends Functions
 
 	protected abstract String successPage();
 
+	/**
+	 * Page shown when the owner's class may not use the evolved pet, null when any class
+	 * may (High Five ImprovedPetsLimitedUse: mages no Improved Baby Buffalo, fighters no
+	 * Improved Baby Kookaburra).
+	 */
+	protected String classRefusedPage(Player player)
+	{
+		return null;
+	}
+
 	public void evolve()
 	{
 		Player player = getSelf();
@@ -72,6 +83,12 @@ public abstract class PetEvolution extends Functions
 		if(pet.getNpcId() != fromNpcId())
 		{
 			show(HTML + wrongPetPage(), player);
+			return;
+		}
+		String classPage = classRefusedPage(player);
+		if(classPage != null)
+		{
+			show(HTML + classPage, player);
 			return;
 		}
 		if(pet.getLevel() < minLevel())
