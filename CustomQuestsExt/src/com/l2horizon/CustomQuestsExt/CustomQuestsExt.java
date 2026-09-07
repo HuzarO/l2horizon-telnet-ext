@@ -5,6 +5,7 @@ import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreManager;
 import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaBypassHandler;
 import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaConfig;
 import com.l2horizon.CustomQuestsExt.kamaloka.KamalokaDeathListener;
+import com.l2horizon.CustomQuestsExt.missions.ClassQuestMissions;
 import com.l2horizon.CustomQuestsExt.buffstore.BuffStoreTable;
 import com.l2horizon.CustomQuestsExt.campfire.CampfireConfig;
 import com.l2horizon.CustomQuestsExt.handlers.admin.ClearInventoryAdminCommand;
@@ -20,6 +21,7 @@ import com.l2horizon.CustomQuestsExt.stages.StageManager;
 import com.l2horizon.CustomQuestsExt.listeners.FortressWorldInfoListener;
 import com.l2horizon.CustomQuestsExt.handlers.user.RollUserCommand;
 
+import l2.gameserver.GameServer;
 import l2.gameserver.dao.FortressDAO;
 import l2.gameserver.handler.bypass.BypassHandler;
 import l2.gameserver.handler.admincommands.AdminCommandHandler;
@@ -54,6 +56,8 @@ public class CustomQuestsExt implements ScriptFile {
 		CharListenerList.addGlobal(new HellboundPvpListener());
 		CharListenerList.addGlobal(new HellboundAccessListener());
 		CharListenerList.addGlobal(new KamalokaDeathListener());
+		ClassQuestMissions.load();
+		GameServer.getInstance().getListeners().addEventListener(new ClassQuestMissions());
 	}
 
 	@Override
