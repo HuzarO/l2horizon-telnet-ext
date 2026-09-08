@@ -53,6 +53,8 @@ public final class GuardHttp implements AutoCloseable {
                 byte[] body = ("{\"sessions\":" + sessions.size() + ",\"accepted\":" + sessions.accepted.sum() + ",\"rejected\":" + sessions.rejected.sum()
                         + ",\"acceptedHealthy\":" + sessions.acceptedHealthy.sum() + ",\"acceptedPending\":" + sessions.acceptedPending.sum()
                         + ",\"acceptedWithFailures\":" + sessions.acceptedWithFailures.sum()
+                        + ",\"acceptedPendingNetwork\":" + sessions.acceptedPendingNetwork.sum()
+                        + ",\"acceptedPendingStartup\":" + sessions.acceptedPendingStartup.sum() + ",\"acceptedPendingStale\":" + sessions.acceptedPendingStale.sum()
                         + ",\"retry\":" + sessions.retries.sum() + ",\"unauthorized\":" + sessions.unauthorized.sum() + ",\"rateLimited\":" + sessions.rateLimited.sum() + ",\"malformed\":" + malformed.sum()
                         + ",\"errors\":" + unavailable.sum() + ",\"httpQueue\":" + workers.getQueue().size() + "}").getBytes(StandardCharsets.US_ASCII);
                 exchange.getResponseHeaders().set("Content-Type", "application/json"); exchange.getResponseHeaders().set("Cache-Control", "no-store");

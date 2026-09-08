@@ -41,26 +41,35 @@ public final class GuardTests {
         final FakeConnection connection = new FakeConnection();
         boolean sinkAvailable = true;
         int storedEvents, batches;
+        List<GuardSessions.PendingReason> lastReasons = List.of();
         final GuardSessions service;
         final GuardSessions.Session session;
         Harness(boolean enforce) { this(enforce, 1_000_000_000L); }
-        Harness(boolean enforce, long origin) {
+        Harness(boolean enforce, long origin) { this(enforce, origin, 30000); }
+        Harness(boolean enforce, long origin, int ttl) {
             time.set(origin);
-            config.enabled = true; config.enforce = enforce;
+            config.enabled = true; config.enforce = enforce; config.ttlMs = ttl;
             Request r = request(golden); Map<String, Long> coverage = new HashMap<>(); for (var m : r.modules()) coverage.put(m.name(), m.coverage());
             var release = new Releases.Release(hex(r.manifest()), "synthetic-test-only", 7, enforce ? 1 : 0, enforce, "https://guard.invalid/guard/v1/session", coverage);
-            service = new GuardSessions(config, new Releases(List.of(release)), (id, reason, events) -> {
-                if (!sinkAvailable) return false; batches++; storedEvents += events.size(); return true;
+            service = new GuardSessions(config, new Releases(List.of(release)), new GuardSessions.Sink() {
+                public boolean accept(String id, String reason, List<Wire.Event> events) {
+                    if (!sinkAvailable) return false; batches++; storedEvents += events.size(); return true;
+                }
+                public boolean accept(String id, String reason, List<Wire.Event> events, List<GuardSessions.PendingReason> pending) {
+                    lastReasons = pending; return accept(id, reason, events);
+                }
             }, time::get, new SecureRandom());
             session = service.create(connection, "test-account", 1);
         }
         void advance(long ms) { time.addAndGet(ms * 1000000L); }
-        byte[] open() {
+        byte[] open() { return open(connection); }
+        byte[] open(FakeConnection connection) {
             byte[] r = golden.clone(); System.arraycopy(connection.bootstrap, 8, r, 8, 16); System.arraycopy(connection.bootstrap, 24, r, 96, 32);
             r[165] = (byte)(config.enforce ? 1 : 0); return r;
         }
-        byte[] beat(byte[] reply, long sequence) {
-            byte[] r = open(); r[6] = 2; u64(r, 24, sequence); Arrays.fill(r, 96, 128, (byte)0);
+        byte[] beat(byte[] reply, long sequence) { return beat(connection, reply, sequence); }
+        byte[] beat(FakeConnection connection, byte[] reply, long sequence) {
+            byte[] r = open(connection); r[6] = 2; u64(r, 24, sequence); Arrays.fill(r, 96, 128, (byte)0);
             Arrays.fill(r, 32, 64, (byte)(sequence + 10)); System.arraycopy(reply, 64, r, 64, 32); return r;
         }
     }
@@ -149,6 +158,8 @@ public final class GuardTests {
         Harness auditPending = new Harness(false); byte[] auditWaiting = auditPending.open(); auditWaiting[166] = 0;
         check(decision(auditPending.service.handle(auditWaiting)) == 0 && auditPending.service.acceptedPending.sum() == 1,
                 "audit pending distinguished from hard failure");
+        check(auditPending.service.acceptedPendingNetwork.sum() == 1 && auditPending.lastReasons.stream().anyMatch(p -> p.reason().equals("network-pending")),
+                "network pending diagnosed separately");
         Harness auditHealthy = new Harness(false);
         check(decision(auditHealthy.service.handle(auditHealthy.open())) == 0 && auditHealthy.service.acceptedHealthy.sum() == 1,
                 "complete healthy measurements counted separately");
@@ -189,6 +200,84 @@ public final class GuardTests {
         httpFailure(() -> isolation.service.handle(firstSession), 403, "ticket bound to exact socket even for same account");
         isolation.service.close(otherSession); check(isolation.service.size() == 1, "closing one multibox session retains the other");
     }
+    static Map<String, Integer> moduleOffsets(byte[] body) {
+        ByteBuffer b = ByteBuffer.wrap(body).order(ByteOrder.LITTLE_ENDIAN); b.position(184);
+        int count = Short.toUnsignedInt(b.getShort()); Map<String, Integer> offsets = new LinkedHashMap<>();
+        for (int i = 0; i < count; i++) {
+            byte[] name = new byte[Short.toUnsignedInt(b.getShort())]; b.get(name);
+            offsets.put(new String(name, java.nio.charset.StandardCharsets.US_ASCII), b.position());
+            b.position(b.position() + 21);
+        }
+        return offsets;
+    }
+    static void scanProgress(byte[] report, long elapsed, long cycleDuration) {
+        for (int at : moduleOffsets(report).values()) {
+            u64(report, at + 5, 2 + elapsed / cycleDuration);
+            u64(report, at + 13, 1000 + elapsed);
+        }
+        u64(report, 168, 42 + elapsed / cycleDuration);
+    }
+    static void pendingDiagnostics(Path fixtures) throws Exception {
+        Harness startup = new Harness(false); byte[] starting = startup.open(); int engine = moduleOffsets(starting).get("engine.dll");
+        starting[engine] = 0; u64(starting, engine + 5, 0);
+        check(decision(startup.service.handle(starting)) == 0 && startup.service.acceptedPendingStartup.sum() == 1, "initial module scan has a startup category");
+        check(startup.lastReasons.stream().anyMatch(p -> p.reason().equals("module-not-ready") && p.module().equals("engine.dll")), "pending names incomplete module");
+
+        // Two independent windows with slow 90 s / 100 s full scans remain healthy while
+        // reporting real progress; neither window's activity refreshes the other's clocks.
+        Harness firstWindow = new Harness(true); FakeConnection secondWindow = new FakeConnection();
+        firstWindow.service.create(secondWindow, "test-account", 1);
+        byte[] firstReply = firstWindow.service.handle(firstWindow.open()), secondReply = firstWindow.service.handle(firstWindow.open(secondWindow));
+        for (int step = 1; step <= 11; step++) {
+            firstWindow.advance(10000);
+            byte[] a = firstWindow.beat(firstReply, step + 1), b = firstWindow.beat(secondWindow, secondReply, step + 1);
+            scanProgress(a, step * 10000L, 90000); scanProgress(b, step * 10000L, 100000);
+            firstReply = firstWindow.service.handle(a); secondReply = firstWindow.service.handle(b);
+            check(decision(firstReply) == 0 && decision(secondReply) == 0, "two slow full scans admitted with ongoing progress");
+        }
+        check(firstWindow.service.acceptedHealthy.sum() == 24, "slow scan is not confused with stopped scan");
+        firstWindow.advance(45000);
+        byte[] active = firstWindow.beat(firstReply, 13), frozen = firstWindow.beat(secondWindow, secondReply, 13);
+        scanProgress(active, 155000, 90000); scanProgress(frozen, 110000, 100000);
+        check(decision(firstWindow.service.handle(active)) == 0 && decision(firstWindow.service.handle(frozen)) == 1,
+                "one window's progress cannot keep another stalled window fresh on the same server");
+
+        Harness bounded = new Harness(false); byte[] response = bounded.service.handle(bounded.open());
+        for (int step = 1; step <= 12; step++) {
+            bounded.advance(10000); byte[] report = bounded.beat(response, step + 1);
+            scanProgress(report, step * 10000L, Long.MAX_VALUE); // keep claiming chunks, never finish a cycle
+            response = bounded.service.handle(report);
+        }
+        check(bounded.service.acceptedPendingStale.sum() == 1 && !bounded.session.healthy, "chunk timestamps cannot indefinitely renew full-cycle deadline");
+        check(bounded.lastReasons.size() == 4 && bounded.lastReasons.stream().allMatch(p -> p.reason().equals("cycle-stale")
+                && p.cycleAgeMs() == 120000 && p.progressAgeMs() == 0 && p.cycleLimitMs() == 120000), "full-cycle diagnostic includes exact age and bound");
+        var reasons = bounded.lastReasons;
+        bounded.advance(1000); byte[] recovery = bounded.beat(response, 14); scanProgress(recovery, 121000, 90000);
+        check(decision(bounded.service.handle(recovery)) == 0 && bounded.lastReasons.isEmpty(), "completed scan recovers and clears pending reasons");
+
+        Harness stopped = new Harness(false); byte[] old = stopped.service.handle(stopped.open()); stopped.advance(45000);
+        stopped.service.handle(stopped.beat(old, 2));
+        check(stopped.service.acceptedPendingStale.sum() == 1 && stopped.lastReasons.stream().allMatch(p -> p.reason().equals("scan-progress-stale")
+                && p.progressAgeMs() == 45000), "45-second no-progress bound remains enforced");
+
+        Harness cold = new Harness(true, 1_000_000_000L, 120000); byte[] opening = cold.open();
+        for (int at : moduleOffsets(opening).values()) { opening[at] = 0; u64(opening, at + 5, 0); }
+        check(decision(cold.service.handle(opening)) == 1 && !cold.service.permitted(cold.session, false, false), "cold client cannot enter before full scans");
+        cold.advance(90000); byte[] warmed = cold.open(); u64(warmed, 24, 2);
+        check(decision(cold.service.handle(warmed)) == 0, "cold 90-second startup fits explicit 120-second ticket");
+        Harness expired = new Harness(true, 1_000_000_000L, 120000); expired.advance(120000);
+        check(decision(expired.service.handle(expired.open())) == 2, "slow-PC startup allowance is still bounded");
+
+        Path log = fixtures.resolve("pending-diagnostics.jsonl"); Files.deleteIfExists(log);
+        try (EventSink sink = new EventSink(log, 64)) {
+            check(sink.accept("00".repeat(16), "measurements-pending", List.of(), reasons), "pending diagnostics queued");
+        }
+        var json = com.google.gson.JsonParser.parseString(Files.readString(log)).getAsJsonObject();
+        var detail = json.getAsJsonArray("pendingReasons").get(0).getAsJsonObject();
+        check(json.get("result").getAsString().equals("measurements-pending") && detail.get("reason").getAsString().equals("cycle-stale")
+                && detail.get("cycleAgeMs").getAsLong() == 120000 && detail.get("progressLimitMs").getAsInt() == 45000,
+                "real event log records machine-readable pending reason and thresholds");
+    }
     static void http() throws Exception {
         Harness h = new Harness(false); h.config.port = 0;
         try (GuardHttp server = new GuardHttp(h.config, h.service)) {
@@ -196,6 +285,11 @@ public final class GuardTests {
             HttpClient client = HttpClient.newBuilder().connectTimeout(java.time.Duration.ofSeconds(2)).build();
             var good = client.send(HttpRequest.newBuilder(uri).header("Content-Type", "application/octet-stream").POST(HttpRequest.BodyPublishers.ofByteArray(h.open())).build(), HttpResponse.BodyHandlers.ofByteArray());
             check(good.statusCode() == 200 && decision(good.body()) == 0 && good.headers().firstValue("Cache-Control").orElse("").equals("no-store"), "real HTTP OPEN");
+            var health = client.send(HttpRequest.newBuilder(uri.resolve("/guard/health")).GET().build(), HttpResponse.BodyHandlers.ofString());
+            var counters = com.google.gson.JsonParser.parseString(health.body()).getAsJsonObject();
+            check(health.statusCode() == 200 && counters.get("acceptedHealthy").getAsLong() == 1
+                    && counters.get("acceptedPendingNetwork").getAsLong() == 0 && counters.get("acceptedPendingStartup").getAsLong() == 0
+                    && counters.get("acceptedPendingStale").getAsLong() == 0, "HTTP health exposes pending categories");
             var wrong = client.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.discarding()); check(wrong.statusCode() == 405, "HTTP method");
             for (int bytes : new int[]{1, 16385}) {
                 var r = client.send(HttpRequest.newBuilder(uri).header("Content-Type", "application/octet-stream").POST(HttpRequest.BodyPublishers.ofByteArray(new byte[bytes])).build(), HttpResponse.BodyHandlers.discarding());
@@ -410,7 +504,7 @@ public final class GuardTests {
     }
     public static void main(String[] args) throws Exception {
         Path fixtures = Path.of(args[0]); golden = Files.readAllBytes(fixtures.resolve("open-request.bin"));
-        codec(fixtures); manifest(fixtures); sessions(); http(); legacy(); integration(fixtures);
+        codec(fixtures); manifest(fixtures); sessions(); pendingDiagnostics(fixtures); http(); legacy(); integration(fixtures);
         System.out.println("Guard server tests passed: " + checks + " checks (including all truncated golden request prefixes).");
     }
 }

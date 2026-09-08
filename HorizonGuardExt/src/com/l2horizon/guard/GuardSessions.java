@@ -11,12 +11,18 @@ import com.l2horizon.guard.Wire.Module;
 /** Session authority. Every transition is serialized on that exact connection's session. */
 public final class GuardSessions {
     public interface Connection { boolean alive(); void bootstrap(byte[] payload); void disconnect(); }
-    public interface Sink { boolean accept(String id, String result, List<Event> events); }
+    public record PendingReason(String reason, String module, int status, long cycles, long progressAgeMs, long cycleAgeMs, int progressLimitMs, int cycleLimitMs) {}
+    public interface Sink {
+        boolean accept(String id, String result, List<Event> events);
+        default boolean accept(String id, String result, List<Event> events, List<PendingReason> reasons) {
+            return accept(id, result, events);
+        }
+    }
     public static final class HttpFailure extends RuntimeException {
         public final int status;
         HttpFailure(int status) { this.status = status; }
     }
-    private record Progress(long cycles, long scanMs, long advancedAt) {}
+    private record Progress(long cycles, long scanMs, long advancedAt, long progressedAt) {}
     public static final class Session {
         final Connection connection;
         final byte[] id, ticketHash;
@@ -43,6 +49,7 @@ public final class GuardSessions {
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     public final LongAdder accepted = new LongAdder(), rejected = new LongAdder(), retries = new LongAdder(), rateLimited = new LongAdder(), unauthorized = new LongAdder();
     public final LongAdder acceptedHealthy = new LongAdder(), acceptedPending = new LongAdder(), acceptedWithFailures = new LongAdder();
+    public final LongAdder acceptedPendingNetwork = new LongAdder(), acceptedPendingStartup = new LongAdder(), acceptedPendingStale = new LongAdder();
     public GuardSessions(GuardConfig config, Releases releases, Sink sink) { this(config, releases, sink, System::nanoTime, new SecureRandom()); }
     GuardSessions(GuardConfig config, Releases releases, Sink sink, LongSupplier clock, SecureRandom random) {
         this.config = config; this.releases = releases; this.sink = sink; this.clock = clock; this.random = random;
@@ -118,22 +125,34 @@ public final class GuardSessions {
             for (Module m : r.modules()) if (!Objects.equals(release.coverage().get(m.name()), m.coverage())) return reject(s, r, "coverage");
             boolean healthy = r.files() && r.network() == 1 && r.epoch() != 0;
             boolean hard = !r.files() || r.network() >= 2;
+            List<PendingReason> pending = new ArrayList<>();
+            if (r.network() == 0) pending.add(new PendingReason("network-pending", "", 0, 0, 0, 0, 0, 0));
+            if (r.epoch() == 0) pending.add(new PendingReason("first-scan-pending", "", 0, 0, 0, 0, 0, 0));
             if (Long.compareUnsigned(r.epoch(), s.epoch) < 0 || Long.compareUnsigned(r.dropped(), s.dropped) < 0) hard = true;
             Map<String, Progress> next = new HashMap<>();
             for (Module m : r.modules()) {
                 Progress p = s.progress.get(m.name()); long advanced = p == null ? now : p.advancedAt;
+                long progressed = p == null ? now : p.progressedAt;
                 if (p != null && (Long.compareUnsigned(m.cycles(), p.cycles) < 0 || Long.compareUnsigned(m.lastScanMs(), p.scanMs) < 0)) hard = true;
                 if (p == null || Long.compareUnsigned(m.cycles(), p.cycles) > 0) advanced = now;
-                if (m.status() != 1 || m.cycles() == 0 || now - advanced >= ms(config.staleMs)) healthy = false;
+                if (p == null || Long.compareUnsigned(m.lastScanMs(), p.scanMs) > 0 || Long.compareUnsigned(m.cycles(), p.cycles) > 0) progressed = now;
+                boolean stalled = now - progressed >= ms(config.staleMs);
+                boolean cycleExpired = now - advanced >= ms(config.maxCycleMs);
+                if (m.status() != 1 || m.cycles() == 0 || stalled || cycleExpired) healthy = false;
                 if (m.status() >= 2) hard = true;
-                next.put(m.name(), new Progress(m.cycles(), m.lastScanMs(), advanced));
+                if (m.status() == 0 || m.cycles() == 0)
+                    pending.add(new PendingReason("module-not-ready", m.name(), m.status(), m.cycles(), 0, 0, config.staleMs, config.maxCycleMs));
+                else if (m.status() == 1 && (stalled || cycleExpired))
+                    pending.add(new PendingReason(stalled ? "scan-progress-stale" : "cycle-stale", m.name(), m.status(), m.cycles(),
+                            Math.max(0, (now - progressed) / 1000000L), Math.max(0, (now - advanced) / 1000000L), config.staleMs, config.maxCycleMs));
+                next.put(m.name(), new Progress(m.cycles(), m.lastScanMs(), advanced, progressed));
             }
             List<Event> newEvents = r.events().stream().filter(e -> Long.compareUnsigned(e.sequence(), s.ack) > 0).toList();
             // Severity is a reported observation, not a permanent ban. Enforce only integrity/failure rules < 200.
             if (newEvents.stream().anyMatch(e -> e.rule() < 200 && e.severity() >= 2)) hard = true;
             healthy &= !hard;
             String result = hard ? "measurement-failure" : healthy ? "healthy" : "measurements-pending";
-            boolean stored = sink.accept(hex(s.id), result, newEvents);
+            boolean stored = sink.accept(hex(s.id), result, newEvents, hard || healthy ? List.of() : List.copyOf(pending));
             if (stored && !newEvents.isEmpty()) s.ack = newEvents.get(newEvents.size() - 1).sequence();
             int decision = config.enforce && hard ? 2 : !stored || config.enforce && !healthy ? 1 : 0;
             s.lastSequence = r.sequence(); s.lastHash = bodyHash; s.lastDecision = decision; s.lastPrevious = r.previous();
@@ -144,7 +163,13 @@ public final class GuardSessions {
                 s.healthy = healthy; s.everHealthy |= healthy; accepted.increment();
                 if (hard) acceptedWithFailures.increment();
                 else if (healthy) acceptedHealthy.increment();
-                else acceptedPending.increment();
+                else {
+                    acceptedPending.increment();
+                    // One primary category per report. Detailed JSON retains every pending check.
+                    if (r.network() == 0) acceptedPendingNetwork.increment();
+                    else if (pending.stream().anyMatch(p -> p.reason().endsWith("stale"))) acceptedPendingStale.increment();
+                    else acceptedPendingStartup.increment();
+                }
             } else if (decision == 2) { s.rejected = true; s.healthy = false; rejected.increment(); }
             else retries.increment();
             return response(s, r, decision, s.lastNonce, config.leaseMs);

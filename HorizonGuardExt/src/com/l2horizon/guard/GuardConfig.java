@@ -7,6 +7,7 @@ import static com.l2horizon.guard.Wire.require;
 public final class GuardConfig {
     public boolean enabled = false, enforce = false;
     public int port = 9087, ttlMs = 30000, leaseMs = 60000, staleMs = 45000, maxSessions = 10000;
+    public int maxCycleMs = 120000;
     public int workers = 4, queueSize = 64, eventQueue = 8192;
     public long minimumPolicy = 1;
     public Path releases = Path.of("config/guard/releases"), key = Path.of("config/guard/release-public.blob");
@@ -17,6 +18,7 @@ public final class GuardConfig {
         c.enabled = bool(p, "enabled", false); c.enforce = bool(p, "enforce", false);
         c.port = number(p, "port", 9087, 1024, 65535); c.ttlMs = number(p, "ticketMs", 30000, 10000, 120000);
         c.leaseMs = number(p, "leaseMs", 60000, 1000, 60000); c.staleMs = number(p, "staleMs", 45000, 10000, 120000);
+        c.maxCycleMs = number(p, "maxCycleMs", 120000, c.staleMs, 300000);
         c.minimumPolicy = number(p, "minimumPolicy", 1, 1, Integer.MAX_VALUE);
         c.maxSessions = number(p, "maxSessions", 10000, 1, 100000);
         c.workers = number(p, "httpWorkers", 4, 1, 32); c.queueSize = number(p, "httpQueue", 64, 1, 1024);

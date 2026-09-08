@@ -20,9 +20,22 @@ public final class EventSink implements GuardSessions.Sink, AutoCloseable {
         try (var ignored = Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {}
         writer = new Thread(this::writeLoop, "guard-events"); writer.setDaemon(true); writer.start();
     }
-    @Override public synchronized boolean accept(String id, String kind, List<Wire.Event> events) {
+    @Override public boolean accept(String id, String kind, List<Wire.Event> events) {
+        return accept(id, kind, events, List.of());
+    }
+    @Override public synchronized boolean accept(String id, String kind, List<Wire.Event> events, List<GuardSessions.PendingReason> reasons) {
         if (!running || queue.remainingCapacity() < events.size() + 1) { lost.addAndGet(events.size() + 1L); return false; }
-        queue.add("{\"time\":" + System.currentTimeMillis() + ",\"session\":\"" + id + "\",\"result\":\"" + kind + "\"}");
+        StringBuilder row = new StringBuilder("{\"time\":" + System.currentTimeMillis() + ",\"session\":\"" + id + "\",\"result\":\"" + kind + "\",\"pendingReasons\":[");
+        for (int i = 0; i < reasons.size(); i++) {
+            var p = reasons.get(i);
+            // Reasons are server constants; module names passed the bounded wire name validator.
+            if (i != 0) row.append(',');
+            row.append("{\"reason\":\"").append(p.reason()).append("\",\"module\":\"").append(p.module())
+                    .append("\",\"status\":").append(p.status()).append(",\"cycles\":\"").append(Long.toUnsignedString(p.cycles()))
+                    .append("\",\"progressAgeMs\":").append(p.progressAgeMs()).append(",\"cycleAgeMs\":").append(p.cycleAgeMs())
+                    .append(",\"progressLimitMs\":").append(p.progressLimitMs()).append(",\"cycleLimitMs\":").append(p.cycleLimitMs()).append('}');
+        }
+        queue.add(row.append("]}").toString());
         for (Wire.Event e : events) queue.add("{\"session\":\"" + id + "\",\"seq\":\"" + Long.toUnsignedString(e.sequence())
                 + "\",\"rule\":" + e.rule() + ",\"severity\":" + e.severity() + ",\"module\":\"" + e.module()
                 + "\",\"rva\":" + e.rva() + ",\"hash\":\"" + Wire.hex(e.hash()) + "\"}");

@@ -133,6 +133,8 @@ public final class GuardHooks {
                 LOG.info("Guard sessions=" + sessions.size() + " accepted=" + sessions.accepted.sum() + " rejected=" + sessions.rejected.sum()
                         + " acceptedHealthy=" + sessions.acceptedHealthy.sum() + " acceptedPending=" + sessions.acceptedPending.sum()
                         + " acceptedWithFailures=" + sessions.acceptedWithFailures.sum()
+                        + " acceptedPendingNetwork=" + sessions.acceptedPendingNetwork.sum()
+                        + " acceptedPendingStartup=" + sessions.acceptedPendingStartup.sum() + " acceptedPendingStale=" + sessions.acceptedPendingStale.sum()
                         + " retry=" + sessions.retries.sum() + " eventsLost=" + sink.lost.get() + " eventsWritten=" + sink.written.get()
                         + " emergencyEstablished=" + emergencyActive());
             }

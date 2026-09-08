@@ -57,3 +57,9 @@ Istotne ograniczenie: client user mode może sfabrykować własne pomiary. Ten p
 ## Odczyt wyników pilota
 
 `accepted` liczy przyjęte raporty, także z niepoprawnymi pomiarami w audit. Nowe liczniki `acceptedHealthy`, `acceptedPending` i `acceptedWithFailures` rozróżniają odpowiednio poprawne, oczekujące i błędne pomiary. Są dostępne w logu minutowym i prywatnym `/guard/health`; retransmisje nie zwiększają ich ponownie. Przed enforce sprawdź wzrost `acceptedHealthy` po pierwszym pełnym skanie oraz status Verified i rosnące cycles wszystkich czterech modułów klienta.
+
+## Przyczyny pending i wolniejsze klienty
+
+`staleMs` (45 s) ogranicza brak postępu skanowania modułu. `maxCycleMs` (120 s) osobno ogranicza czas bez ukończenia pełnego cyklu. Obie granice mierzy zegar serwera od zaobserwowanej zmiany licznika/znacznika; klient nie przesyła serwerowego terminu ważności. Przesuwanie czasu fragmentów nie przesuwa terminu pełnego cyklu, duplikaty żądań niczego nie odnawiają, a regresja liczników nadal jest błędem. Pierwszy pełny skan pozostaje obowiązkowy w enforce. Wdrożenie dla dwóch okien/słabszych komputerów używa jawnego ticketMs=120000 i podpisanego startupGraceMs=120000; lease nadal ma 60 s.
+
+Minutowy log i prywatne health pokazują acceptedPendingNetwork, acceptedPendingStartup oraz acceptedPendingStale. To rozłączny podział acceptedPending: priorytet ma network, potem stale, potem startup. Log JSON ma pełne pendingReasons: network-pending, first-scan-pending, module-not-ready, scan-progress-stale lub cycle-stale, wraz z nazwą modułu, licznikiem cycles, progressAgeMs/cycleAgeMs i aktualnymi limitami. Nie zawiera ticketu, nonce ani treści okien.
