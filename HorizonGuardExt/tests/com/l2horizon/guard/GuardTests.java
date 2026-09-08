@@ -142,6 +142,16 @@ public final class GuardTests {
         check(decision(recovered.service.handle(ready)) == 0, "ready snapshot after retry");
         Harness audit = new Harness(false); byte[] tampered = audit.open(); tampered[166] = 4;
         check(decision(audit.service.handle(tampered)) == 0 && !audit.session.healthy && audit.service.permitted(audit.session, true, false), "audit observes without false verified state");
+        check(audit.service.accepted.sum() == 1 && audit.service.acceptedWithFailures.sum() == 1 && audit.service.acceptedHealthy.sum() == 0,
+                "accepted audit failure distinguished from healthy report");
+        audit.service.handle(tampered);
+        check(audit.service.acceptedWithFailures.sum() == 1, "retransmission does not inflate measurement counters");
+        Harness auditPending = new Harness(false); byte[] auditWaiting = auditPending.open(); auditWaiting[166] = 0;
+        check(decision(auditPending.service.handle(auditWaiting)) == 0 && auditPending.service.acceptedPending.sum() == 1,
+                "audit pending distinguished from hard failure");
+        Harness auditHealthy = new Harness(false);
+        check(decision(auditHealthy.service.handle(auditHealthy.open())) == 0 && auditHealthy.service.acceptedHealthy.sum() == 1,
+                "complete healthy measurements counted separately");
         Harness enforce = new Harness(true); byte[] tamper = enforce.open(); tamper[166] = 4;
         check(decision(enforce.service.handle(tamper)) == 2, "enforce measurement failure");
         for (int offset : new int[]{128, 160, 165, 197}) {

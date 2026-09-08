@@ -42,6 +42,7 @@ public final class GuardSessions {
     private final SecureRandom random;
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     public final LongAdder accepted = new LongAdder(), rejected = new LongAdder(), retries = new LongAdder(), rateLimited = new LongAdder(), unauthorized = new LongAdder();
+    public final LongAdder acceptedHealthy = new LongAdder(), acceptedPending = new LongAdder(), acceptedWithFailures = new LongAdder();
     public GuardSessions(GuardConfig config, Releases releases, Sink sink) { this(config, releases, sink, System::nanoTime, new SecureRandom()); }
     GuardSessions(GuardConfig config, Releases releases, Sink sink, LongSupplier clock, SecureRandom random) {
         this.config = config; this.releases = releases; this.sink = sink; this.clock = clock; this.random = random;
@@ -141,6 +142,9 @@ public final class GuardSessions {
             if (decision == 0) {
                 s.opened = true; s.expectedNonce = s.lastNonce; s.leaseDeadline = now + ms(config.leaseMs);
                 s.healthy = healthy; s.everHealthy |= healthy; accepted.increment();
+                if (hard) acceptedWithFailures.increment();
+                else if (healthy) acceptedHealthy.increment();
+                else acceptedPending.increment();
             } else if (decision == 2) { s.rejected = true; s.healthy = false; rejected.increment(); }
             else retries.increment();
             return response(s, r, decision, s.lastNonce, config.leaseMs);

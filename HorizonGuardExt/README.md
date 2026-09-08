@@ -53,3 +53,7 @@ Metryki backendu: lokalne GET `/guard/health`; nie wystawiaj tej ścieżki publi
 Dokładna procedura znajduje się w `l2horizon-server/tools/guard/WDROZENIE.md`. Paczka serwerowa jest nakładką na osobną kopię pełnego serwera. Zawiera własny entrypoint `GuardMain`; zmienione skrypty startowe ustawiają jednoznaczną kolejność JAR-ów. Rdzeniowy `server.jar` pozostaje bez zmian.
 
 Istotne ograniczenie: client user mode może sfabrykować własne pomiary. Ten protokół podnosi koszt ingerencji i daje serwerowi kontrolę nad dopuszczeniem; nie stanowi sprzętowej atestacji. Zasady walki/handlu nadal muszą być autorytatywne po stronie Lucera2. AFK, multibox i private store buff nie są same w sobie powodem kary. Ocena realnej gry, współbieżnych zakupów i botów pozostaje częścią pilota.
+
+## Odczyt wyników pilota
+
+`accepted` liczy przyjęte raporty, także z niepoprawnymi pomiarami w audit. Nowe liczniki `acceptedHealthy`, `acceptedPending` i `acceptedWithFailures` rozróżniają odpowiednio poprawne, oczekujące i błędne pomiary. Są dostępne w logu minutowym i prywatnym `/guard/health`; retransmisje nie zwiększają ich ponownie. Przed enforce sprawdź wzrost `acceptedHealthy` po pierwszym pełnym skanie oraz status Verified i rosnące cycles wszystkich czterech modułów klienta.

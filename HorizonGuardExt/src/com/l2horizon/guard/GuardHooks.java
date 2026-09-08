@@ -131,6 +131,8 @@ public final class GuardHooks {
             if (now - lastMetrics >= TimeUnit.SECONDS.toNanos(60)) {
                 lastMetrics = now;
                 LOG.info("Guard sessions=" + sessions.size() + " accepted=" + sessions.accepted.sum() + " rejected=" + sessions.rejected.sum()
+                        + " acceptedHealthy=" + sessions.acceptedHealthy.sum() + " acceptedPending=" + sessions.acceptedPending.sum()
+                        + " acceptedWithFailures=" + sessions.acceptedWithFailures.sum()
                         + " retry=" + sessions.retries.sum() + " eventsLost=" + sink.lost.get() + " eventsWritten=" + sink.written.get()
                         + " emergencyEstablished=" + emergencyActive());
             }
