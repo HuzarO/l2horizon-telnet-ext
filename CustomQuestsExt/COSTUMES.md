@@ -64,11 +64,23 @@ client icon names.
 items (the 20 original ones regenerated with the same icons and a fuller
 description) and `tools/client/skill_rows/` the Skillgrp and SkillName rows
 for all 124 skills (`merge_item_rows.py`, `merge_skill_rows.py`). The icons
-of the new families come from the retail costume items of the Classic tables;
-two are best guesses to check in game: Dark Red Wizard
-(`g_bm_costume_wizard_wine`) and Mystic (`g_bm_costume_magician`), and the
-seven event outfits reuse related icons (pirate, dark assassin, white knight,
-inquisitor, wizard circlet, halloween, pumpkin).
+of the 39 families are those of the retail costume preview items 71439-71477
+of the client's Costume table (checked, all 39 match); the seven event
+outfits reuse related icons (pirate, dark assassin, white knight, inquisitor,
+wizard circlet, halloween, pumpkin).
+
+## What the client's Costume table confirms
+
+`Costume_Classic.dat` (152 rows) is the retail costume system: 39 families,
+each with grades whose skills the server keeps as 59158-59324. Those skills
+use `<base>_light` for 34 families and `<base>_black` for Zaken, Dragon
+Berserker, Anakim, Lilith and Freya, so those 39 looks are confirmed by
+retail data. The other 85 looks (the black and red auras, the plain and red
+looks of the five boss costumes, the seven event outfits) are in the core's
+AbnormalEffect list with their client ids but are not used by retail data;
+the try pages at Erica are the way to check them, a look that does not change
+the character is one to remove from costumes.json. The "legacy" appearances of
+the Lucera thread are neither in that table nor in the core.
 
 ## Changing things
 
