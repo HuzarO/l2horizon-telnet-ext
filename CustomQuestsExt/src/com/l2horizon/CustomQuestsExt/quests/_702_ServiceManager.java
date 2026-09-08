@@ -9,6 +9,7 @@ import java.util.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.l2horizon.CustomQuestsExt.costumes.AppearancePreview;
 import l2.gameserver.Config;
 import l2.gameserver.model.Player;
 import l2.gameserver.model.SubClass;
@@ -102,6 +103,10 @@ public class _702_ServiceManager extends Quest implements ScriptFile {
 	@Override
 	public String onEvent(String event, QuestState qState, NpcInstance npc) {
 		final Player player = qState.getPlayer();
+
+		if (event.startsWith("try_costume ") || event.startsWith("try_mount ")) {
+			return AppearancePreview.handle(player, event); // "Try a costume / mount" pages of the shop tab, see COSTUMES.md
+		}
 
 		if (event.startsWith("teleport_to")) {
 			try {
