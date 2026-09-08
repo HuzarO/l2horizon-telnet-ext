@@ -25,7 +25,7 @@ import l2.gameserver.tables.SkillTable;
  */
 public final class AppearancePreview
 {
-	public static final int SECONDS = 60;
+	public static final int SECONDS = 30;
 	private static final Map<Integer, Preview> ACTIVE = new ConcurrentHashMap<>();
 
 	private static final class Preview
@@ -88,7 +88,7 @@ public final class AppearancePreview
 		end(player);
 		if(!skill.checkCondition(player, player, false, false, true)) // already transformed, riding, in water ... with the retail message
 			return false;
-		skill.getEffects(player, player, false, false);
+		skill.getEffects(player, player, false, false, SECONDS * 1000L, 1.0, false); // the transformation for SECONDS, not the skill's own hour
 		schedule(player, new Preview()).mountSkill = skillId;
 		player.sendMessage(new CustomMessage("l2horizon.preview.mount", player, skill.getName()));
 		return true;

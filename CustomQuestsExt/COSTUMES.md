@@ -42,18 +42,21 @@ client icon names.
   Coins (91616) each.
 * Shop tab, "Try Costumes and Mounts": `shop/try_costumes_1..4.htm` (the
   families, a Plain / Black / Red button each), `shop/try_outfits.htm`,
-  `shop/try_mounts.htm` (the 20 mounts of multisell 999009). A button sends
+  `shop/try_mounts.htm` (the 20 mounts of multisell 999009). Every skill sold
+  has its button and every button is a sold skill (124 costume looks, 20
+  mounts). A button sends
   `bypass -h Quest _702_ServiceManager try_costume <skill> <page>` or
   `try_mount <skill>`, handled by
   `com.l2horizon.CustomQuestsExt.costumes.AppearancePreview` (no core class
   shadowed):
-  * costume: the appearance abnormal of the skill is shown for 60 seconds
+  * costume: the appearance abnormal of the skill is shown for 30 seconds
     without touching the buffs; the abnormal of the costume the player wears
     is hidden for the minute and shown again afterwards. Refused while dead,
     transformed, mounted or in the Olympiad.
   * mount: the effects of the mount skill (the same transformation the bought
-    mount gives) are applied and stopped after 60 seconds; the skill's own
-    conditions decide (already transformed, riding, in water, pet out ... with
+    mount gives) are applied with a 30-second duration instead of the skill's
+    hour, so the buff bar shows 30 seconds and the transformation ends by
+    itself; the skill's own conditions decide (already transformed, riding, in water, pet out ... with
     the retail message).
   * one preview per player, a new one ends the running one; messages
     `l2horizon.preview.costume|mount|unavailable` (en, ru).
