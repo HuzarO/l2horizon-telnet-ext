@@ -303,6 +303,72 @@ public final class GuardTests {
         }
         return packet;
     }
+    static final class AuthSocket extends l2.commons.net.nio.impl.MMOConnection<l2.authserver.network.l2.L2LoginClient> {
+        l2.commons.net.nio.impl.ReceivablePacket<l2.authserver.network.l2.L2LoginClient> received;
+        l2.commons.net.nio.impl.SendablePacket<l2.authserver.network.l2.L2LoginClient> sent;
+        private AuthSocket() { super(null, null, null); } // allocated without opening a socket
+        @Override public boolean isClosed() { return false; }
+        @Override public void recvPacket(l2.commons.net.nio.impl.ReceivablePacket<l2.authserver.network.l2.L2LoginClient> packet) { received = packet; }
+        @Override public void sendPacket(l2.commons.net.nio.impl.SendablePacket<l2.authserver.network.l2.L2LoginClient> packet) { sent = packet; }
+    }
+    static byte[] engineAuthFrame(byte[] body, byte[] key) throws Exception {
+        // Engine.dll RVA 0x300410 aligns the opcode + body, appends XOR + 4 reserved bytes,
+        // then calls RVA 0x2ca9c0, which appends another XOR + 4 bytes before Blowfish.
+        // Both routines were checked against the actual client DLL, not just the old disassembly.
+        int aligned = (1 + body.length + 7) & ~7;
+        ByteBuffer plain = ByteBuffer.allocate(aligned + 16).order(ByteOrder.LITTLE_ENDIAN);
+        plain.put((byte)0x14).put(body);
+        for (int end : new int[]{aligned, aligned + 8}) {
+            int checksum = 0;
+            for (int i = 0; i < end; i += 4) checksum ^= plain.getInt(i);
+            plain.putInt(end, checksum);
+        }
+        // Engine and Lucera use little-endian Blowfish words; JCE uses big-endian words.
+        // Swap at the independent JCE boundary, then decrypt with Lucera's real LoginCrypt.
+        var cipher = javax.crypto.Cipher.getInstance("Blowfish/ECB/NoPadding");
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, new javax.crypto.spec.SecretKeySpec(key, "Blowfish"));
+        byte[] encrypted = swapWords(cipher.doFinal(swapWords(plain.array())));
+        ByteBuffer frame = ByteBuffer.allocate(encrypted.length + 2).order(ByteOrder.LITTLE_ENDIAN);
+        frame.putShort((short)frame.capacity()).put(encrypted);
+        return frame.array();
+    }
+    static byte[] swapWords(byte[] bytes) {
+        ByteBuffer words = ByteBuffer.wrap(bytes);
+        for (int i = 0; i < bytes.length; i += 4) words.putInt(i, Integer.reverseBytes(words.getInt(i)));
+        return bytes;
+    }
+    static void legacyFraming(byte[] valid, com.l2horizon.AuthGuardExt.FileHashManager manager) throws Exception {
+        byte[] key = "guard-test-key!!".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        byte[] frame = engineAuthFrame(valid, key);
+        check(valid.length + 1 == 905 && frame.length == 930, "actual Engine AuthGuard framing size");
+        // Exercise SelectorThread's real limit handling with another packet in the same receive buffer.
+        for (int following : new int[]{0, 32}) {
+            ByteBuffer incoming = ByteBuffer.allocate(frame.length + following).order(ByteOrder.LITTLE_ENDIAN);
+            incoming.put(frame); while (incoming.hasRemaining()) incoming.put((byte)0x5a); incoming.flip();
+            int encryptedLength = incoming.getChar() - 2;
+            var crypt = new l2.authserver.crypt.LoginCrypt(0, new l2.authserver.crypt.NewCrypt(key), null);
+            ByteBuffer checksumProbe = ByteBuffer.wrap(frame.clone()).order(ByteOrder.LITTLE_ENDIAN);
+            check(crypt.decrypt(checksumProbe, 2, encryptedLength), "real LoginCrypt accepts Engine checksum layers");
+            var client = (l2.authserver.network.l2.L2LoginClient)withoutConstructor(l2.authserver.network.l2.L2LoginClient.class);
+            client.setLoginCrypt(crypt); client.setState(l2.authserver.network.l2.L2LoginClient.LoginClientState.AUTHED);
+            AuthSocket socket = (AuthSocket)withoutConstructor(AuthSocket.class); socket.setClient(client);
+            var connect = l2.commons.net.nio.impl.MMOClient.class.getDeclaredMethod("setConnection", l2.commons.net.nio.impl.MMOConnection.class);
+            connect.setAccessible(true); connect.invoke(client, socket);
+            var selector = withoutConstructor(l2.commons.net.nio.impl.SelectorThread.class);
+            var parse = l2.commons.net.nio.impl.SelectorThread.class.getDeclaredMethod("parseClientPacket",
+                    l2.commons.net.nio.impl.IPacketHandler.class, ByteBuffer.class, int.class, l2.commons.net.nio.impl.MMOConnection.class);
+            parse.setAccessible(true); parse.invoke(selector, client, incoming, encryptedLength, socket);
+            check(socket.received instanceof l2.authserver.network.l2.c2s.RequestFileHashes, "Engine frame reaches real AuthGuard packet execution");
+            var packet = (l2.authserver.network.l2.c2s.RequestFileHashes)socket.received;
+            check(manager.areValid(packet.getFileHashes()), "encrypted Engine report retains all six hashes");
+            check(!client.getFilesVerificationPassed(), "parsing alone cannot approve verification");
+            packet.run();
+            check(client.getFilesVerificationPassed() && socket.sent instanceof l2.authserver.network.l2.s2c.FileHashesResult,
+                    "real AuthGuard run approves hashes and sends result");
+            check(incoming.position() == 2 + 905 && incoming.limit() == incoming.capacity(), "SelectorThread restores shared receive buffer limit");
+            for (int i = frame.length; i < incoming.limit(); i++) check(incoming.get(i) == (byte)0x5a, "following packet remains untouched");
+        }
+    }
     static void legacy() throws Exception {
         String[] names = {"l2.exe", "interface.u", "interface.xdat", "core.u", "engine.u", "nwindow.u"};
         ByteBuffer payload = ByteBuffer.allocate(4096).order(ByteOrder.LITTLE_ENDIAN); payload.putInt(6);
@@ -315,7 +381,8 @@ public final class GuardTests {
         Files.createDirectories(Path.of("config")); Path file = Path.of("config/authguard_file_hashes.xml"); Files.writeString(file, xml);
         var manager = com.l2horizon.AuthGuardExt.FileHashManager.getInstance();
         check(manager.size() == 6 && manager.areValid(legacyRead(valid).getFileHashes()), "bounded legacy real packet and XML");
-        for (int padding = 0; padding <= 11; padding++) check(legacyRead(Arrays.copyOf(valid, valid.length + padding)).getFileCount() == 6, "legacy crypt trailer " + padding);
+        legacyFraming(valid, manager);
+        for (int padding = 0; padding <= 23; padding++) check(legacyRead(Arrays.copyOf(valid, valid.length + padding)).getFileCount() == 6, "legacy crypt trailer " + padding);
         for (int count : new int[]{0, -1, 7, 32, 0x7fffffff}) {
             byte[] body = new byte[4]; u32(body, 0, count);
             try { legacyRead(body); throw new AssertionError("legacy allocation limit"); } catch (IllegalArgumentException e) { checks++; }
@@ -323,7 +390,7 @@ public final class GuardTests {
         byte[] longName = valid.clone(); for (int i = 4; i < 4 + 128; i += 2) { longName[i] = 'x'; longName[i + 1] = 0; }
         try { legacyRead(longName); throw new AssertionError("legacy string limit"); } catch (IllegalArgumentException e) { checks++; }
         try { legacyRead(Arrays.copyOf(valid, valid.length - 1)); throw new AssertionError("legacy truncated"); } catch (BufferUnderflowException e) { checks++; }
-        try { legacyRead(Arrays.copyOf(valid, valid.length + 12)); throw new AssertionError("legacy trailing limit"); } catch (IllegalArgumentException e) { checks++; }
+        try { legacyRead(Arrays.copyOf(valid, valid.length + 24)); throw new AssertionError("legacy trailing limit"); } catch (IllegalArgumentException e) { checks++; }
         Files.writeString(file, xml.toString().replace("authguard_file_hashes.dtd", "file:///DOES-NOT-EXIST/guard-test.dtd")); manager.reload();
         check(manager.size() == 6, "external DTD never fetched");
         Files.writeString(file, xml.toString().replace("<list>", "<list><file name=\"l2.exe\" sha256=\"" + hash + "\"/>")); manager.reload();

@@ -28,6 +28,10 @@ Klient już będący w wyborze postaci może potrzebować ponownie nacisnąć we
 
 `AuthGuardHardening.ext.jar` zachowuje publiczny ABI dwóch klas AuthGuardExt. Wymaga dokładnie sześciu plików, ogranicza długość nazw i hashów, odrzuca duplikaty i nie alokuje kolekcji według niezweryfikowanej liczby z pakietu. Zachowuje dopuszczalny trailer szyfrowania L2. Loader XML blokuje zewnętrzne encje i pobieranie DTD; niepoprawna polityka daje odmowę weryfikacji. Dotychczasowy opcode 0x14 i `FileHashesResult` pozostają zgodne.
 
+Poprawka `AuthGuard trailing data`: rzeczywisty Engine.dll (SHA-256 `20f29e430464ccdb3cbeb2661da649c7d8e402ffcbc6298f0d72f5e281be62ca`) tworzy końcówkę w dwóch miejscach: RVA `0x300410` wyrównuje dane do 8 bajtów i dodaje 8 bajtów, a wywołanie RVA `0x2ca9c0` dodaje następne 8 przed Blowfish. Obie funkcje sprawdzono bezpośrednio w pliku DLL. Raport sześciu plików ma 905 bajtów z opcode, 928 po szyfrowaniu i 930 z nagłówkiem długości. Parser musi dopuścić 23 bajty końcówki; wcześniejszy limit 11 błędnie odrzucał poprawne logowanie. Granica ramki nadal pochodzi z `SelectorThread`, a ograniczenia rekordów pozostają aktywne.
+
+Test regresji odtwarza oba kroki tworzenia końcówki, szyfruje jawnym kluczem testowym przez JCE Blowfish z kolejnością słów klienta, a następnie wykonuje rzeczywiste `LoginCrypt`, `L2LoginClient.handlePacket`, `SelectorThread.parseClientPacket` i `RequestFileHashes.run`. Obejmuje też dodatkowe bajty kolejnego pakietu w buforze odbioru i odrzucenie końcówki dłuższej niż 23 bajty. Nie wymaga uruchamiania gry ani bazy danych.
+
 ## Polityka i limity
 
 Backend rejestruje wyłącznie podpisane manifesty z lokalnego katalogu administratora. Weryfikuje RSA-PSS SHA-256/MGF1 SHA-256/salt 32 oraz odczytuje klucz publiczny CNG. Rejestr, profile, minimalną wersję i tryb porównuje z raportem; nie przyjmuje manifestów od graczy. Usunięcie wydania i restart usługi wycofuje jego dopuszczenie. Klucz prywatny nie trafia na GameServer.

@@ -7,6 +7,8 @@ import l2.authserver.network.l2.s2c.FileHashesResult;
 
 /** Same 0x14 payload and public ABI as AuthGuardExt, with bounded allocation and strings. */
 public final class RequestFileHashes extends L2LoginClientPacket {
+    // Engine.dll's auth sender and nested Blowfish encoder each append an eight-byte trailer.
+    private static final int MAX_CRYPT_TRAILER = 7 + 8 + 8;
     private int fileCount;
     private List<FileHashEntry> fileHashes = List.of();
     @Override protected void readImpl() {
@@ -20,9 +22,9 @@ public final class RequestFileHashes extends L2LoginClientPacket {
                 throw new IllegalArgumentException("AuthGuard file record");
             entries.add(new FileHashEntry(name, digest));
         }
-        // LoginCrypt retains up to seven alignment bytes plus the four-byte checksum after payload.
-        // The framing/crypt layer validates that trailer; do not mistake it for another file record.
-        if (getByteBuffer().remaining() > 11) throw new IllegalArgumentException("AuthGuard trailing data");
+        // SelectorThread limits this buffer to the decrypted frame, including crypt trailers.
+        // Retail Engine RVA 0x300410 -> 0x2ca9c0 retains up to 23 bytes after the file records.
+        if (getByteBuffer().remaining() > MAX_CRYPT_TRAILER) throw new IllegalArgumentException("AuthGuard trailing data");
         fileHashes = List.copyOf(entries);
     }
     private String boundedString(int max) {
